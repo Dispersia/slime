@@ -18,6 +18,12 @@ fn main() {
         trail_weight: 0.2,
         num_agents: 1_000_000,
         steps_per_frame: 1,
+        move_speed: 30.0,
+        turn_speed: -3.0,
+
+        sensor_angle_degrees: 112.0,
+        sensor_offset_dst: 20.0,
+        sensor_size: 1,
     };
 
     runner::run_app(settings, start);

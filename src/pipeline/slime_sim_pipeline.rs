@@ -126,12 +126,12 @@ impl super::Pipeline for SlimeSimPipeline {
         });
 
         let species_settings = SpeciesSetting {
-            move_speed: 30.0,
-            turn_speed: -3.0,
+            move_speed: settings.move_speed,
+            turn_speed: settings.turn_speed,
 
-            sensor_angle_degrees: 112.0,
-            sensor_offset_dst: 20.0,
-            sensor_size: 1,
+            sensor_angle_degrees: settings.sensor_angle_degrees,
+            sensor_offset_dst: settings.sensor_offset_dst,
+            sensor_size: settings.sensor_size,
         };
 
         let species_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {

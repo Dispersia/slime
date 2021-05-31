@@ -5,6 +5,11 @@ pub struct AppSettings {
     pub trail_weight: f32,
     pub num_agents: usize,
     pub steps_per_frame: usize,
+    pub move_speed: f32,
+    pub turn_speed: f32,
+    pub sensor_angle_degrees: f32,
+    pub sensor_offset_dst: f32,
+    pub sensor_size: i32,
 }
 
 pub struct App {
