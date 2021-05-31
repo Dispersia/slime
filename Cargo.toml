@@ -1,0 +1,157 @@
+[package]
+authors = ["Aaron Housh <dispersias@gmail.com>"]
+edition = "2018"
+name = "slime"
+version = "0.1.0"
+
+[profile.release]
+codegen-units = 1
+lto = 'thin'
+
+[dependencies]
+bytemuck = {version = "1.5", features = ["derive"]}
+cgmath = "0.18"
+instant = {version = "0.1", features = ["wasm-bindgen"]}
+wgpu = {git = "https://github.com/gfx-rs/wgpu-rs"}
+log = "0.4"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+async-executor = "1.0"
+pollster = "0.2"
+pretty_env_logger = "0.4"
+rand = "0.7"
+winit = "0.25"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+console_error_panic_hook = "0.1"
+console_log = "0.2"
+js-sys = "0.3"
+rand = {version = "0.7", features = ["wasm-bindgen"]}
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+web-sys = {version = "0.3", features = [
+  "Document",
+  "Navigator",
+  "Node",
+  "NodeList",
+  "Gpu",
+  "GpuAdapter",
+  "GpuAdapterFeatures",
+  "GpuAdapterLimits",
+  "GpuAddressMode",
+  "GpuBindGroup",
+  "GpuBindGroupDescriptor",
+  "GpuBindGroupEntry",
+  "GpuBindGroupLayout",
+  "GpuBindGroupLayoutDescriptor",
+  "GpuBindGroupLayoutEntry",
+  "GpuBlendComponent",
+  "GpuBlendFactor",
+  "GpuBlendOperation",
+  "GpuBlendState",
+  "GpuBuffer",
+  "GpuBufferBinding",
+  "GpuBufferBindingLayout",
+  "GpuBufferBindingType",
+  "GpuBufferDescriptor",
+  "GpuBufferUsage",
+  "GpuCanvasContext",
+  "GpuColorDict",
+  "GpuColorTargetState",
+  "GpuColorWrite",
+  "GpuCommandBuffer",
+  "GpuCommandBufferDescriptor",
+  "GpuCommandEncoder",
+  "GpuCommandEncoderDescriptor",
+  "GpuCompareFunction",
+  "GpuCompilationInfo",
+  "GpuCompilationMessage",
+  "GpuCompilationMessageType",
+  "GpuComputePassDescriptor",
+  "GpuComputePassEncoder",
+  "GpuComputePipeline",
+  "GpuComputePipelineDescriptor",
+  "GpuCullMode",
+  "GpuDepthStencilState",
+  "GpuDevice",
+  "GpuDeviceDescriptor",
+  "GpuDeviceLostInfo",
+  "GpuDeviceLostReason",
+  "GpuErrorFilter",
+  "GpuExtent3dDict",
+  "GpuFeatureName",
+  "GpuFilterMode",
+  "GpuFragmentState",
+  "GpuFrontFace",
+  "GpuImageCopyBuffer",
+  "GpuImageCopyImageBitmap",
+  "GpuImageCopyTexture",
+  "GpuImageDataLayout",
+  "GpuIndexFormat",
+  "GpuInputStepMode",
+  "GpuLoadOp",
+  "GpuMapMode",
+  "GpuMultisampleState",
+  "GpuObjectDescriptorBase",
+  "GpuOrigin2dDict",
+  "GpuOrigin3dDict",
+  "GpuOutOfMemoryError",
+  "GpuPipelineDescriptorBase",
+  "GpuPipelineLayout",
+  "GpuPipelineLayoutDescriptor",
+  "GpuPipelineStatisticName",
+  "GpuPowerPreference",
+  "GpuPrimitiveState",
+  "GpuPrimitiveTopology",
+  "GpuProgrammableStage",
+  "GpuQuerySet",
+  "GpuQuerySetDescriptor",
+  "GpuQueryType",
+  "GpuQueue",
+  "GpuRenderBundle",
+  "GpuRenderBundleDescriptor",
+  "GpuRenderBundleEncoder",
+  "GpuRenderBundleEncoderDescriptor",
+  "GpuRenderPassColorAttachment",
+  "GpuRenderPassDepthStencilAttachment",
+  "GpuRenderPassDescriptor",
+  "GpuRenderPassEncoder",
+  "GpuRenderPipeline",
+  "GpuRenderPipelineDescriptor",
+  "GpuRequestAdapterOptions",
+  "GpuSampler",
+  "GpuSamplerBindingLayout",
+  "GpuSamplerBindingType",
+  "GpuSamplerDescriptor",
+  "GpuShaderModule",
+  "GpuShaderModuleDescriptor",
+  "GpuShaderStage",
+  "GpuStencilFaceState",
+  "GpuStencilOperation",
+  "GpuStorageTextureAccess",
+  "GpuStorageTextureBindingLayout",
+  "GpuStoreOp",
+  "GpuSwapChain",
+  "GpuSwapChainDescriptor",
+  "GpuTexture",
+  "GpuTextureAspect",
+  "GpuTextureBindingLayout",
+  "GpuTextureDescriptor",
+  "GpuTextureDimension",
+  "GpuTextureFormat",
+  "GpuTextureSampleType",
+  "GpuTextureUsage",
+  "GpuTextureView",
+  "GpuTextureViewDescriptor",
+  "GpuTextureViewDimension",
+  "GpuUncapturedErrorEvent",
+  "GpuUncapturedErrorEventInit",
+  "GpuValidationError",
+  "GpuVertexAttribute",
+  "GpuVertexBufferLayout",
+  "GpuVertexFormat",
+  "GpuVertexState",
+  "HtmlCanvasElement",
+  "Window",
+]}
+winit = {version = "0.25", features = ["web-sys"]}
