@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use bytemuck::{Pod, Zeroable};
 use wgpu::util::DeviceExt;
 
-const BOUND_SIZE: usize = 64;
+const BOUND_SIZE: f32 = 64.0;
 
 pub struct ClearPipeline {
     pipeline: wgpu::ComputePipeline,
@@ -84,7 +84,7 @@ impl super::Pipeline for ClearPipeline {
         });
 
         let work_group_count =
-            ((bind.width * bind.height) as f32 / BOUND_SIZE as f32).ceil() as u32;
+            ((bind.width * bind.height) as f32 / BOUND_SIZE).ceil() as u32;
 
         let slime_sim_compute_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {

@@ -4,21 +4,19 @@ use crate::shader_pipeline::Agent;
 
 use super::{SlimeSimSetup, TimeBuffer};
 
+const AGENTS_PER_GROUP: f32 = 16.0;
+
 pub struct CopyAgentMapPipeline {
     pipeline: wgpu::ComputePipeline,
     bind_group: wgpu::BindGroup,
-    num_agents: u32,
+    workgroup_count: u32,
 }
 
 impl super::Pipeline for CopyAgentMapPipeline {
     type Bind = SlimeSimSetup;
     type Update = TimeBuffer;
 
-    fn new(
-        device: &wgpu::Device,
-        settings: &crate::app::AppSettings,
-        bind: &Self::Bind,
-    ) -> Self {
+    fn new(device: &wgpu::Device, settings: &crate::app::AppSettings, bind: &Self::Bind) -> Self {
         let shader = device.create_shader_module(&wgpu::ShaderModuleDescriptor {
             label: Some("slime::shader::copy"),
             source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_str!(
@@ -85,10 +83,12 @@ impl super::Pipeline for CopyAgentMapPipeline {
             module: &shader,
         });
 
+        let workgroup_count = (bind.num_agents as f32 / AGENTS_PER_GROUP).ceil() as u32;
+
         Self {
             pipeline: diffuse_pipeline,
             bind_group,
-            num_agents: bind.num_agents,
+            workgroup_count,
         }
     }
 
@@ -101,7 +101,7 @@ impl super::Pipeline for CopyAgentMapPipeline {
                 encoder.begin_compute_pass(&wgpu::ComputePassDescriptor { label: None });
             compute_pass.set_pipeline(&self.pipeline);
             compute_pass.set_bind_group(0, &self.bind_group, &[]);
-            compute_pass.dispatch(self.num_agents, 1, 1);
+            compute_pass.dispatch(self.workgroup_count, 1, 1);
         }
         encoder.pop_debug_group();
     }

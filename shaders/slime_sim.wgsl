@@ -81,7 +81,7 @@ fn sense(agent: Agent, settings: SpeciesSetting, sensor_angle_offset: f32) -> f3
     return sum;
 }
 
-[[stage(compute), workgroup_size(16)]]
+[[stage(compute), workgroup_size(64)]]
 fn cs_main(input: ComputeInput) {
     let id = input.global_invocation_id;
 

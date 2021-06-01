@@ -5,23 +5,21 @@ use wgpu::util::DeviceExt;
 
 use super::TimeBuffer;
 
+const LENGTH_PER_GROUP: f32 = 8.0;
+
 pub struct DiffusePipeline {
     pipeline: wgpu::ComputePipeline,
     bind_group: wgpu::BindGroup,
     time_buffer: wgpu::Buffer,
-    width: u32,
-    height: u32,
+    workgroup_count_x: u32,
+    workgroup_count_y: u32,
 }
 
 impl super::Pipeline for DiffusePipeline {
     type Bind = DiffuseSettings;
     type Update = TimeBuffer;
 
-    fn new(
-        device: &wgpu::Device,
-        settings: &crate::app::AppSettings,
-        bind: &Self::Bind,
-    ) -> Self {
+    fn new(device: &wgpu::Device, settings: &crate::app::AppSettings, bind: &Self::Bind) -> Self {
         let shader = device.create_shader_module(&wgpu::ShaderModuleDescriptor {
             label: Some("slime::shader::diffuse"),
             source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_str!(
@@ -141,12 +139,15 @@ impl super::Pipeline for DiffusePipeline {
             module: &shader,
         });
 
+        let workgroup_count_x = (bind.width as f32 / LENGTH_PER_GROUP).ceil() as u32;
+        let workgroup_count_y = (bind.height as f32 / LENGTH_PER_GROUP).ceil() as u32;
+
         Self {
             pipeline: diffuse_pipeline,
             bind_group,
             time_buffer,
-            width: bind.width,
-            height: bind.height,
+            workgroup_count_x,
+            workgroup_count_y,
         }
     }
 
@@ -161,7 +162,7 @@ impl super::Pipeline for DiffusePipeline {
                 encoder.begin_compute_pass(&wgpu::ComputePassDescriptor { label: None });
             compute_pass.set_pipeline(&self.pipeline);
             compute_pass.set_bind_group(0, &self.bind_group, &[]);
-            compute_pass.dispatch(self.width, self.height, 1);
+            compute_pass.dispatch(self.workgroup_count_x, self.workgroup_count_y, 1);
         }
         encoder.pop_debug_group();
     }

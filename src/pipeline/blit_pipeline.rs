@@ -3,11 +3,13 @@ use std::borrow::Cow;
 use bytemuck::{Pod, Zeroable};
 use wgpu::util::DeviceExt;
 
+const BLIT_SIZE: f32 = 8.0;
+
 pub struct BlitPipeline {
     pipeline: wgpu::ComputePipeline,
     bind_group: wgpu::BindGroup,
-    width: u32,
-    height: u32,
+    workgroup_count_x: u32,
+    workgroup_count_y: u32,
 }
 
 impl super::Pipeline for BlitPipeline {
@@ -105,11 +107,14 @@ impl super::Pipeline for BlitPipeline {
             module: &shader,
         });
 
+        let workgroup_count_x = (bind.width as f32 / BLIT_SIZE).ceil() as u32;
+        let workgroup_count_y = (bind.height as f32 / BLIT_SIZE).ceil() as u32;
+
         Self {
             pipeline: diffuse_pipeline,
             bind_group,
-            width: bind.width,
-            height: bind.height,
+            workgroup_count_x,
+            workgroup_count_y,
         }
     }
 
@@ -122,7 +127,7 @@ impl super::Pipeline for BlitPipeline {
                 encoder.begin_compute_pass(&wgpu::ComputePassDescriptor { label: None });
             compute_pass.set_pipeline(&self.pipeline);
             compute_pass.set_bind_group(0, &self.bind_group, &[]);
-            compute_pass.dispatch(self.width, self.height, 1);
+            compute_pass.dispatch(self.workgroup_count_x, self.workgroup_count_y, 1);
         }
         encoder.pop_debug_group();
     }

@@ -16,7 +16,7 @@ mod shader_pipeline;
 fn main() {
     let settings = AppSettings {
         trail_weight: 0.2,
-        num_agents: 500_000,
+        num_agents: 10_000,
         steps_per_frame: 1,
         move_speed: 50.0,
         turn_speed: -3.0,

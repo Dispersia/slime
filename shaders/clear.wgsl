@@ -18,7 +18,7 @@ fn cs_main(input: ComputeInput) {
     let x = id.x % globals.width;
     let y = u32(f32(id.x) / f32(globals.width));
 
-    if (x < 0u32 || x > globals.width || y < 0u32 || y >= globals.height) {
+    if (x < 0u32 || x >= globals.width || y < 0u32 || y >= globals.height) {
         return;
     }
 
