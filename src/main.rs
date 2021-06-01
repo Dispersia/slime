@@ -4,6 +4,7 @@ use app::{App, AppSettings};
 use pipeline::TimeBuffer;
 use shader_pipeline::ShaderPipeline;
 use winit::{
+    dpi::PhysicalSize,
     event::{self, Event, WindowEvent},
     event_loop::ControlFlow,
 };
@@ -15,9 +16,12 @@ mod shader_pipeline;
 
 fn main() {
     let settings = AppSettings {
-        trail_weight: 0.2,
-        num_agents: 10_000,
+        width: 800,
+        height: 600,
+
+        num_agents: 750_000,
         steps_per_frame: 1,
+
         move_speed: 50.0,
         turn_speed: -3.0,
 
@@ -25,8 +29,9 @@ fn main() {
         sensor_offset_dst: 20.0,
         sensor_size: 1,
 
-        diffuse_rate: 5.0,
+        trail_weight: 2.0,
         decay_rate: 0.75,
+        diffuse_rate: 5.0,
 
         agents_only: false,
     };
@@ -58,17 +63,13 @@ fn start(
 
     let mut swap_chain = device.create_swap_chain(&surface, &swapchain_descriptor);
 
+    let size = PhysicalSize::new(settings.width, settings.height);
     let mut shader_pipeline = ShaderPipeline::new(settings, &size, &swapchain_descriptor, &device);
 
     let start_time = Instant::now();
-    //let mut current_time = Instant::now();
 
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Poll;
-
-        //let new_time = Instant::now();
-        //let previous_time = new_time - current_time;
-        //current_time = new_time;
 
         match event {
             Event::RedrawRequested(_) => {

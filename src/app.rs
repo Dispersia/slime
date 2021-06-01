@@ -2,6 +2,8 @@ use wgpu::{Features, Limits};
 use winit::{dpi::PhysicalSize, event_loop::EventLoop, window::WindowBuilder};
 
 pub struct AppSettings {
+    pub width: u32,
+    pub height: u32,
     pub trail_weight: f32,
     pub num_agents: usize,
     pub steps_per_frame: usize,

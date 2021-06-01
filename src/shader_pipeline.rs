@@ -176,6 +176,7 @@ impl ShaderPipeline {
             device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
 
         self.slime_sim_pipeline.update(&queue, &time_buffer);
+        self.diffuse_pipeline.update(&queue, &time_buffer);
 
         for _ in 0..self.settings.steps_per_frame {
             self.slime_sim_pipeline
