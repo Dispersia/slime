@@ -1,5 +1,6 @@
 use crate::app::AppSettings;
 
+mod blit_pipeline;
 mod clear_pipeline;
 mod copy_agent_map_pipeline;
 mod diffuse_pipeline;
@@ -16,6 +17,7 @@ pub trait Pipeline {
 }
 
 pub use self::{
+    blit_pipeline::{BlitPipeline, BlitSettings},
     clear_pipeline::{ClearPipeline, ClearSetup},
     copy_agent_map_pipeline::CopyAgentMapPipeline,
     diffuse_pipeline::{DiffusePipeline, DiffuseSettings},

@@ -3,29 +3,22 @@ use std::borrow::Cow;
 use bytemuck::{Pod, Zeroable};
 use wgpu::util::DeviceExt;
 
-use super::TimeBuffer;
-
-pub struct DiffusePipeline {
+pub struct BlitPipeline {
     pipeline: wgpu::ComputePipeline,
     bind_group: wgpu::BindGroup,
-    time_buffer: wgpu::Buffer,
     width: u32,
     height: u32,
 }
 
-impl super::Pipeline for DiffusePipeline {
-    type Bind = DiffuseSettings;
-    type Update = TimeBuffer;
+impl super::Pipeline for BlitPipeline {
+    type Bind = BlitSettings;
+    type Update = ();
 
-    fn new(
-        device: &wgpu::Device,
-        settings: &crate::app::AppSettings,
-        bind: &Self::Bind,
-    ) -> Self {
+    fn new(device: &wgpu::Device, _settings: &crate::app::AppSettings, bind: &Self::Bind) -> Self {
         let shader = device.create_shader_module(&wgpu::ShaderModuleDescriptor {
-            label: Some("slime::shader::diffuse"),
+            label: Some("slime::shader::blit"),
             source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_str!(
-                "../../shaders/diffuse.wgsl"
+                "../../shaders/blit.wgsl"
             ))),
             flags: wgpu::ShaderFlags::all(),
         });
@@ -48,27 +41,15 @@ impl super::Pipeline for DiffusePipeline {
                 wgpu::BindGroupLayoutEntry {
                     binding: 1,
                     visibility: wgpu::ShaderStage::COMPUTE,
-                    ty: wgpu::BindingType::Buffer {
-                        has_dynamic_offset: false,
-                        min_binding_size: wgpu::BufferSize::new(
-                            std::mem::size_of::<TimeBuffer>() as wgpu::BufferAddress
-                        ),
-                        ty: wgpu::BufferBindingType::Uniform,
-                    },
-                    count: None,
-                },
-                wgpu::BindGroupLayoutEntry {
-                    binding: 2,
-                    visibility: wgpu::ShaderStage::COMPUTE,
                     ty: wgpu::BindingType::StorageTexture {
-                        access: wgpu::StorageTextureAccess::ReadWrite,
+                        access: wgpu::StorageTextureAccess::ReadOnly,
                         format: wgpu::TextureFormat::Rgba16Float,
                         view_dimension: wgpu::TextureViewDimension::D2,
                     },
                     count: None,
                 },
                 wgpu::BindGroupLayoutEntry {
-                    binding: 3,
+                    binding: 2,
                     visibility: wgpu::ShaderStage::COMPUTE,
                     ty: wgpu::BindingType::StorageTexture {
                         access: wgpu::StorageTextureAccess::WriteOnly,
@@ -83,24 +64,11 @@ impl super::Pipeline for DiffusePipeline {
         let globals = Globals {
             width: bind.width,
             height: bind.height,
-            diffuse_rate: settings.diffuse_rate,
-            decay_rate: settings.decay_rate,
-        };
-
-        let time = TimeBuffer {
-            time: 0,
-            delta_time: 0.0,
         };
 
         let globals_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: None,
             contents: bytemuck::bytes_of(&globals),
-            usage: wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST,
-        });
-
-        let time_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: None,
-            contents: bytemuck::bytes_of(&time),
             usage: wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST,
         });
 
@@ -114,15 +82,11 @@ impl super::Pipeline for DiffusePipeline {
                 },
                 wgpu::BindGroupEntry {
                     binding: 1,
-                    resource: time_buffer.as_entire_binding(),
+                    resource: wgpu::BindingResource::TextureView(&bind.input_texture),
                 },
                 wgpu::BindGroupEntry {
                     binding: 2,
-                    resource: wgpu::BindingResource::TextureView(&bind.trail_map_texture),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 3,
-                    resource: wgpu::BindingResource::TextureView(&bind.diffuse_texture),
+                    resource: wgpu::BindingResource::TextureView(&bind.output_texture),
                 },
             ],
         });
@@ -144,15 +108,12 @@ impl super::Pipeline for DiffusePipeline {
         Self {
             pipeline: diffuse_pipeline,
             bind_group,
-            time_buffer,
             width: bind.width,
             height: bind.height,
         }
     }
 
-    fn update(&mut self, queue: &wgpu::Queue, update: &Self::Update) {
-        queue.write_buffer(&self.time_buffer, 0, bytemuck::bytes_of(update));
-    }
+    fn update(&mut self, _queue: &wgpu::Queue, _update: &Self::Update) {}
 
     fn execute(&self, encoder: &mut wgpu::CommandEncoder, _frame: &wgpu::SwapChainTexture) {
         encoder.push_debug_group("Render Pipeline");
@@ -167,11 +128,11 @@ impl super::Pipeline for DiffusePipeline {
     }
 }
 
-pub struct DiffuseSettings {
+pub struct BlitSettings {
     pub width: u32,
     pub height: u32,
-    pub trail_map_texture: wgpu::TextureView,
-    pub diffuse_texture: wgpu::TextureView,
+    pub input_texture: wgpu::TextureView,
+    pub output_texture: wgpu::TextureView,
 }
 
 #[repr(C)]
@@ -179,6 +140,4 @@ pub struct DiffuseSettings {
 struct Globals {
     width: u32,
     height: u32,
-    diffuse_rate: f32,
-    decay_rate: f32,
 }

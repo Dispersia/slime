@@ -135,7 +135,7 @@ fn cs_main(input: ComputeInput) {
         let current_pos = vec2<i32>(i32(new_pos.x), i32(new_pos.y));
         let current_map = textureLoad(trail_map, current_pos);
         
-        textureStore(trail_map, current_pos, current_map + vec4<f32>(1.0, 1.0, 1.0, 0.2));
+        textureStore(trail_map, current_pos, min(vec4<f32>(1.0, 1.0, 1.0, 1.0), current_map + vec4<f32>(1.0, 1.0, 1.0, 0.2) * globals.trail_weight * time.delta_time));
     }
 
     agents.agents[index].position = new_pos;

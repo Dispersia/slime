@@ -23,12 +23,12 @@ fn main() {
 
         sensor_angle_degrees: 112.0,
         sensor_offset_dst: 20.0,
-        sensor_size: 3,
+        sensor_size: 1,
 
         diffuse_rate: 5.0,
         decay_rate: 0.75,
 
-        agents_only: true,
+        agents_only: false,
     };
 
     runner::run_app(settings, start);

@@ -14,7 +14,7 @@ struct Time {
 
 [[group(0), binding(0)]] var<uniform> globals: Globals;
 [[group(0), binding(1)]] var<uniform> time: Time;
-[[group(0), binding(2)]] var trail_map: [[access(read)]] texture_storage_2d<rgba16float>;
+[[group(0), binding(2)]] var trail_map: [[access(read_write)]] texture_storage_2d<rgba16float>;
 [[group(0), binding(3)]] var diffuse_trail_map: [[access(write)]] texture_storage_2d<rgba16float>;
 
 struct ComputeInput {
@@ -48,5 +48,6 @@ fn cs_main(input: ComputeInput) {
     let diffuse_weight = clamp(globals.diffuse_rate * time.delta_time, 0.0, 1.0);
     let blurred_col = original_col * (1.0 - diffuse_weight) + blurred_col * diffuse_weight;
 
-    textureStore(diffuse_trail_map, coords, max(vec4<f32>(0.0, 0.0, 0.0, 0.0), blurred_col - globals.decay_rate * time.delta_time));
+    let output = max(vec4<f32>(0.0, 0.0, 0.0, 0.0), blurred_col - globals.decay_rate * time.delta_time);
+    textureStore(diffuse_trail_map, coords, output);
 }
