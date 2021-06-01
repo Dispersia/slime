@@ -16,14 +16,19 @@ mod shader_pipeline;
 fn main() {
     let settings = AppSettings {
         trail_weight: 0.2,
-        num_agents: 1_000_000,
+        num_agents: 500_000,
         steps_per_frame: 1,
-        move_speed: 30.0,
+        move_speed: 50.0,
         turn_speed: -3.0,
 
         sensor_angle_degrees: 112.0,
         sensor_offset_dst: 20.0,
-        sensor_size: 1,
+        sensor_size: 3,
+
+        diffuse_rate: 5.0,
+        decay_rate: 0.75,
+
+        agents_only: true,
     };
 
     runner::run_app(settings, start);
@@ -53,7 +58,7 @@ fn start(
 
     let mut swap_chain = device.create_swap_chain(&surface, &swapchain_descriptor);
 
-    let mut shader_pipeline = ShaderPipeline::new(&settings, &size, &swapchain_descriptor, &device);
+    let mut shader_pipeline = ShaderPipeline::new(settings, &size, &swapchain_descriptor, &device);
 
     let start_time = Instant::now();
     //let mut current_time = Instant::now();

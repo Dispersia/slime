@@ -1,8 +1,9 @@
-use std::{borrow::Cow, f32::consts::PI};
+use std::borrow::Cow;
 
 use bytemuck::{Pod, Zeroable};
-use rand::{distributions::Uniform, prelude::Distribution};
 use wgpu::util::DeviceExt;
+
+use crate::shader_pipeline::Agent;
 
 const PARTICLES_PER_GROUP: usize = 64;
 
@@ -20,13 +21,8 @@ impl super::Pipeline for SlimeSimPipeline {
     fn new(
         device: &wgpu::Device,
         settings: &crate::app::AppSettings,
-        texture: &wgpu::Texture,
         bind: &Self::Bind,
     ) -> Self {
-        let mut rng = rand::thread_rng();
-
-        let texture_view = texture.create_view(&wgpu::TextureViewDescriptor::default());
-
         let slime_sim_compute_shader = device.create_shader_module(&wgpu::ShaderModuleDescriptor {
             label: Some("slime::shader::slime_sim_compute"),
             source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_str!(
@@ -140,28 +136,6 @@ impl super::Pipeline for SlimeSimPipeline {
             usage: wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST,
         });
 
-        let agent_uniform = Uniform::new_inclusive(0.0, 1.0);
-        let agents = (0..settings.num_agents)
-            .into_iter()
-            .map(|_| {
-                let start_pos = [bind.width as f32 / 2.0, bind.height as f32 / 2.0];
-
-                let random_angle: f32 = agent_uniform.sample(&mut rng) * PI * 2.0;
-
-                Agent {
-                    position: start_pos,
-                    angle: random_angle,
-                    _padding: 0,
-                }
-            })
-            .collect::<Vec<Agent>>();
-
-        let agent_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some(&format!("slime::shader::simulation::agents_buffer")),
-            contents: bytemuck::cast_slice(&agents),
-            usage: wgpu::BufferUsage::STORAGE | wgpu::BufferUsage::COPY_DST,
-        });
-
         let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             layout: &slime_sim_compute_bind_group_layout,
             entries: &[
@@ -179,11 +153,11 @@ impl super::Pipeline for SlimeSimPipeline {
                 },
                 wgpu::BindGroupEntry {
                     binding: 3,
-                    resource: agent_buffer.as_entire_binding(),
+                    resource: bind.binding.as_entire_binding(),
                 },
                 wgpu::BindGroupEntry {
                     binding: 4,
-                    resource: wgpu::BindingResource::TextureView(&texture_view),
+                    resource: wgpu::BindingResource::TextureView(&bind.trail_map_texture_view),
                 },
             ],
             label: Some("slime::shader::slime_sim::bind_group"),
@@ -256,17 +230,13 @@ struct SpeciesSetting {
     sensor_size: i32,
 }
 
-#[repr(C)]
-#[derive(Clone, Copy, Pod, Zeroable)]
-struct Agent {
-    position: [f32; 2],
-    angle: f32,
-    _padding: i32,
-}
-
 #[derive(Debug)]
 pub struct SlimeSimSetup {
     pub width: u32,
     pub height: u32,
     pub format: wgpu::TextureFormat,
+    pub binding: wgpu::Buffer,
+    pub trail_map_texture_view: wgpu::TextureView,
+    pub display_texture_view: wgpu::TextureView,
+    pub num_agents: u32,
 }

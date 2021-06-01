@@ -34,7 +34,7 @@ struct Agents {
 [[group(0), binding(1)]] var<uniform> time: TimeBuffer;
 [[group(0), binding(2)]] var<uniform> species_settings: SpeciesSetting;
 [[group(0), binding(3)]] var<storage> agents: [[access(read_write)]] Agents;
-[[group(0), binding(4)]] var sim_texture: [[access(read_write)]] texture_storage_2d<rgba16float>;
+[[group(0), binding(4)]] var trail_map: [[access(read_write)]] texture_storage_2d<rgba16float>;
 
 
 struct ComputeInput {
@@ -72,7 +72,7 @@ fn sense(agent: Agent, settings: SpeciesSetting, sensor_angle_offset: f32) -> f3
             let sample_x = min(globals.width - 1u32, max(0u32, sensor_center_x + u32(offset_x)));
             let sample_y = min(globals.height - 1u32, max(0u32, sensor_center_y + u32(offset_y)));
 
-            let current_map = textureLoad(sim_texture, vec2<i32>(i32(sample_x), i32(sample_y)));
+            let current_map = textureLoad(trail_map, vec2<i32>(i32(sample_x), i32(sample_y)));
             let mask = vec4<f32>(1.0, 1.0, 1.0, 1.0) * 2.0 - 1.0;
             sum = sum + dot(mask, current_map);
         }
@@ -133,9 +133,9 @@ fn cs_main(input: ComputeInput) {
         agents.agents[index].angle = random_angle;
     } else {
         let current_pos = vec2<i32>(i32(new_pos.x), i32(new_pos.y));
-        let current_map = textureLoad(sim_texture, current_pos);
+        let current_map = textureLoad(trail_map, current_pos);
         
-        textureStore(sim_texture, current_pos, current_map + vec4<f32>(1.0, 1.0, 1.0, 0.2));
+        textureStore(trail_map, current_pos, current_map + vec4<f32>(1.0, 1.0, 1.0, 0.2));
     }
 
     agents.agents[index].position = new_pos;

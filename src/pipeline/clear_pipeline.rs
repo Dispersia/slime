@@ -18,11 +18,8 @@ impl super::Pipeline for ClearPipeline {
     fn new(
         device: &wgpu::Device,
         _settings: &crate::app::AppSettings,
-        texture: &wgpu::Texture,
         bind: &Self::Bind,
     ) -> Self {
-        let texture_view = texture.create_view(&wgpu::TextureViewDescriptor::default());
-
         let slime_sim_compute_shader = device.create_shader_module(&wgpu::ShaderModuleDescriptor {
             label: Some("slime::shader::slime_sim_compute"),
             source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_str!(
@@ -80,13 +77,14 @@ impl super::Pipeline for ClearPipeline {
                 },
                 wgpu::BindGroupEntry {
                     binding: 1,
-                    resource: wgpu::BindingResource::TextureView(&texture_view),
+                    resource: wgpu::BindingResource::TextureView(&bind.texture_view),
                 },
             ],
             label: Some("slime::shader::slime_sim::bind_group"),
         });
 
-        let work_group_count = ((bind.width * bind.height) as f32 / BOUND_SIZE as f32).ceil() as u32;
+        let work_group_count =
+            ((bind.width * bind.height) as f32 / BOUND_SIZE as f32).ceil() as u32;
 
         let slime_sim_compute_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
@@ -134,4 +132,5 @@ struct Globals {
 pub struct ClearSetup {
     pub width: u32,
     pub height: u32,
+    pub texture_view: wgpu::TextureView,
 }

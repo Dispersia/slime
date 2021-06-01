@@ -10,6 +10,9 @@ pub struct AppSettings {
     pub sensor_angle_degrees: f32,
     pub sensor_offset_dst: f32,
     pub sensor_size: i32,
+    pub decay_rate: f32,
+    pub diffuse_rate: f32,
+    pub agents_only: bool,
 }
 
 pub struct App {

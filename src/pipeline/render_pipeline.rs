@@ -18,7 +18,6 @@ impl super::Pipeline for RenderPipeline {
     fn new(
         device: &wgpu::Device,
         _settings: &crate::app::AppSettings,
-        texture: &wgpu::Texture,
         bind: &Self::Bind,
     ) -> Self {
         let draw_shader = device.create_shader_module(&wgpu::ShaderModuleDescriptor {
@@ -28,8 +27,6 @@ impl super::Pipeline for RenderPipeline {
             ))),
             flags: wgpu::ShaderFlags::all(),
         });
-
-        let texture_view = texture.create_view(&wgpu::TextureViewDescriptor::default());
 
         let sampler = device.create_sampler(&wgpu::SamplerDescriptor {
             label: None,
@@ -87,7 +84,7 @@ impl super::Pipeline for RenderPipeline {
             entries: &[
                 wgpu::BindGroupEntry {
                     binding: 0,
-                    resource: wgpu::BindingResource::TextureView(&texture_view),
+                    resource: wgpu::BindingResource::TextureView(&bind.texture_view),
                 },
                 wgpu::BindGroupEntry {
                     binding: 1,
@@ -198,4 +195,5 @@ pub struct RenderSettings {
     pub format: wgpu::TextureFormat,
     pub width: u32,
     pub height: u32,
+    pub texture_view: wgpu::TextureView,
 }
