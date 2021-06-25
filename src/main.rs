@@ -114,6 +114,14 @@ fn start(
                 | WindowEvent::CloseRequested => {
                     *control_flow = ControlFlow::Exit;
                 }
+                WindowEvent::KeyboardInput {
+                    input: event::KeyboardInput {
+                        virtual_keycode: Some(event::VirtualKeyCode::L),
+                        state: event::ElementState::Pressed,
+                        ..
+                    },
+                    ..
+                } => { shader_pipeline.swap_buffers(); }
                 _ => {}
             },
             _ => {}

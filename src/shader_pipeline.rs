@@ -204,6 +204,10 @@ impl ShaderPipeline {
         }
     }
 
+    pub fn swap_buffers(&mut self) {
+        self.settings.agents_only = !self.settings.agents_only;
+    }
+
     pub fn render(
         &mut self,
         frame: &wgpu::SwapChainTexture,
