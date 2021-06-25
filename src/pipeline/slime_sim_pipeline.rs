@@ -89,12 +89,22 @@ impl super::Pipeline for SlimeSimPipeline {
                         binding: 4,
                         visibility: wgpu::ShaderStage::COMPUTE,
                         ty: wgpu::BindingType::StorageTexture {
-                            access: wgpu::StorageTextureAccess::ReadWrite,
+                            access: wgpu::StorageTextureAccess::ReadOnly,
                             format: wgpu::TextureFormat::Rgba16Float,
                             view_dimension: wgpu::TextureViewDimension::D2,
                         },
                         count: None,
                     },
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 5,
+                        visibility: wgpu::ShaderStage::COMPUTE,
+                        ty: wgpu::BindingType::StorageTexture {
+                            access: wgpu::StorageTextureAccess::WriteOnly,
+                            format: wgpu::TextureFormat::Rgba16Float,
+                            view_dimension: wgpu::TextureViewDimension::D2
+                        },
+                        count: None,
+                    }
                 ],
             });
 
@@ -159,6 +169,10 @@ impl super::Pipeline for SlimeSimPipeline {
                     binding: 4,
                     resource: wgpu::BindingResource::TextureView(&bind.trail_map_texture_view),
                 },
+                wgpu::BindGroupEntry {
+                    binding: 5,
+                    resource: wgpu::BindingResource::TextureView(&bind.trail_map_write_texture_view),
+                }
             ],
             label: Some("slime::shader::slime_sim::bind_group"),
         });
@@ -237,6 +251,7 @@ pub struct SlimeSimSetup {
     pub format: wgpu::TextureFormat,
     pub binding: wgpu::Buffer,
     pub trail_map_texture_view: wgpu::TextureView,
+    pub trail_map_write_texture_view: wgpu::TextureView,
     pub display_texture_view: wgpu::TextureView,
     pub num_agents: u32,
 }

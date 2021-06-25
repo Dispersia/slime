@@ -72,7 +72,7 @@ impl App {
             .request_device(
                 &wgpu::DeviceDescriptor {
                     label: Some("slime::device"),
-                    features: Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES,
+                    features: Features::default(),
                     limits: Limits::default(),
                 },
                 None,

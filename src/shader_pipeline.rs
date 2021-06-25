@@ -13,6 +13,8 @@ pub struct ShaderPipeline {
     diffuse_pipeline: DiffusePipeline,
     blit_diffuse_pipeline: BlitPipeline,
     blit_display_pipeline: BlitPipeline,
+    blit_trail_map_pipeline: BlitPipeline,
+    blit_trail_map_copy_pipeline: BlitPipeline,
     copy_agents_pipeline: CopyAgentMapPipeline,
     render_pipeline: RenderPipeline,
     frame_num: usize,
@@ -51,6 +53,22 @@ impl ShaderPipeline {
 
         let trail_map = device.create_texture(&wgpu::TextureDescriptor {
             label: Some("slime::shader::simulation::texture"),
+            size: wgpu::Extent3d {
+                width: size.width,
+                height: size.height,
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: wgpu::TextureFormat::Rgba16Float,
+            usage: wgpu::TextureUsage::RENDER_ATTACHMENT
+                | wgpu::TextureUsage::SAMPLED
+                | wgpu::TextureUsage::STORAGE,
+        });
+
+        let trail_map_copy = device.create_texture(&wgpu::TextureDescriptor {
+            label: Some("slime::shader::simulation::trail_map_copy"),
             size: wgpu::Extent3d {
                 width: size.width,
                 height: size.height,
@@ -117,6 +135,7 @@ impl ShaderPipeline {
             format: swapchain_descriptor.format,
             binding: agent_buffer,
             trail_map_texture_view: trail_map.create_view(&wgpu::TextureViewDescriptor::default()),
+            trail_map_write_texture_view: trail_map_copy.create_view(&wgpu::TextureViewDescriptor::default()),
             display_texture_view: display_texture
                 .create_view(&wgpu::TextureViewDescriptor::default()),
             num_agents: agents.len() as u32,
@@ -152,6 +171,24 @@ impl ShaderPipeline {
 
         let blit_display_pipeline = BlitPipeline::new(device, &settings, &blit_display_settings);
 
+        let blip_trail_map_settings = BlitSettings {
+            width: size.width,
+            height: size.height,
+            input_texture: trail_map.create_view(&wgpu::TextureViewDescriptor::default()),
+            output_texture: trail_map_copy.create_view(&wgpu::TextureViewDescriptor::default())
+        };
+
+        let blit_trail_map_pipeline = BlitPipeline::new(device, &settings, &blip_trail_map_settings);
+        
+        let blip_trail_map_copy_settings = BlitSettings {
+            width: size.width,
+            height: size.height,
+            input_texture: trail_map_copy.create_view(&wgpu::TextureViewDescriptor::default()),
+            output_texture: trail_map.create_view(&wgpu::TextureViewDescriptor::default())
+        };
+
+        let blit_trail_map_copy_pipeline = BlitPipeline::new(device, &settings, &blip_trail_map_copy_settings);
+
         Self {
             clear_pipeline,
             slime_sim_pipeline,
@@ -160,6 +197,8 @@ impl ShaderPipeline {
             render_pipeline,
             blit_diffuse_pipeline,
             blit_display_pipeline,
+            blit_trail_map_pipeline,
+            blit_trail_map_copy_pipeline,
             settings,
             frame_num: 0,
         }
@@ -179,8 +218,10 @@ impl ShaderPipeline {
         self.diffuse_pipeline.update(&queue, &time_buffer);
 
         for _ in 0..self.settings.steps_per_frame {
+            self.blit_trail_map_pipeline.execute(&mut command_encoder, &frame);
             self.slime_sim_pipeline
                 .execute(&mut command_encoder, &frame);
+            self.blit_trail_map_copy_pipeline.execute(&mut command_encoder, &frame);
 
             self.diffuse_pipeline.execute(&mut command_encoder, &frame);
 

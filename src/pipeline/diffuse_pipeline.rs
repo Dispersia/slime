@@ -59,7 +59,7 @@ impl super::Pipeline for DiffusePipeline {
                     binding: 2,
                     visibility: wgpu::ShaderStage::COMPUTE,
                     ty: wgpu::BindingType::StorageTexture {
-                        access: wgpu::StorageTextureAccess::ReadWrite,
+                        access: wgpu::StorageTextureAccess::ReadOnly,
                         format: wgpu::TextureFormat::Rgba16Float,
                         view_dimension: wgpu::TextureViewDimension::D2,
                     },
