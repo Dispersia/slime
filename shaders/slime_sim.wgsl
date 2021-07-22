@@ -57,19 +57,19 @@ fn hash(state: u32) -> u32 {
     return state;
 }
 
-fn sense(agent: Agent, settings: SpeciesSetting, sensor_angle_offset: f32) -> f32 {
+fn sense(agent: Agent, sensor_angle_offset: f32) -> f32 {
     let sensor_angle = agent.angle + sensor_angle_offset;
     let sensor_dir = vec2<f32>(cos(sensor_angle), sin(sensor_angle));
 
-    let sensor_pos = agent.position + sensor_dir * settings.sensor_offset_dst;
+    let sensor_pos = agent.position + sensor_dir * species_settings.sensor_offset_dst;
 
     let sensor_center_x = u32(sensor_pos.x);
     let sensor_center_y = u32(sensor_pos.y);
 
     var sum: f32 = 0.0;
 
-    for(var offset_x: i32 = -settings.sensor_size; offset_x <= settings.sensor_size; offset_x = offset_x + 1) {
-        for(var offset_y: i32 = -settings.sensor_size; offset_y <= settings.sensor_size; offset_y = offset_y + 1) {
+    for(var offset_x: i32 = -species_settings.sensor_size; offset_x <= species_settings.sensor_size; offset_x = offset_x + 1) {
+        for(var offset_y: i32 = -species_settings.sensor_size; offset_y <= species_settings.sensor_size; offset_y = offset_y + 1) {
             let sample_x = min(globals.width - 1u32, max(0u32, sensor_center_x + u32(offset_x)));
             let sample_y = min(globals.height - 1u32, max(0u32, sensor_center_y + u32(offset_y)));
 
@@ -102,9 +102,9 @@ fn cs_main(input: ComputeInput) {
     );
 
     let sensor_angle_rad = species_settings.sensor_angle_degrees * (3.1415 / 180.0);
-    let weight_forward = sense(agent, species_settings, 0.0);
-    let weight_left = sense(agent, species_settings, sensor_angle_rad);
-    let weight_right = sense(agent, species_settings, -sensor_angle_rad);
+    let weight_forward = sense(agent, 0.0);
+    let weight_left = sense(agent, sensor_angle_rad);
+    let weight_right = sense(agent, -sensor_angle_rad);
 
     let random_steer_strength = scale_to_range(f32(random));
     let turn_speed = species_settings.turn_speed * 2.0 * 3.1415;
