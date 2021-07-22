@@ -1,19 +1,22 @@
+cargo-features = ["edition2021", "strip"]
+
 [package]
 authors = ["Aaron Housh <dispersias@gmail.com>"]
-edition = "2018"
+edition = "2021"
 name = "slime"
 version = "0.1.0"
 
 [profile.release]
 codegen-units = 1
 lto = 'thin'
+strip = 'symbols'
 
 [dependencies]
 bytemuck = {version = "1.5", features = ["derive"]}
 cgmath = "0.18"
 instant = {version = "0.1", features = ["wasm-bindgen"]}
-wgpu = "0.9"
 log = "0.4"
+wgpu = "0.9"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 async-executor = "1.0"
