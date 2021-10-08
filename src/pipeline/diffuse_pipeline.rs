@@ -25,7 +25,6 @@ impl super::Pipeline for DiffusePipeline {
             source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_str!(
                 "../../shaders/diffuse.wgsl"
             ))),
-            flags: wgpu::ShaderFlags::all(),
         });
 
         let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
@@ -33,7 +32,7 @@ impl super::Pipeline for DiffusePipeline {
             entries: &[
                 wgpu::BindGroupLayoutEntry {
                     binding: 0,
-                    visibility: wgpu::ShaderStage::COMPUTE,
+                    visibility: wgpu::ShaderStages::COMPUTE,
                     ty: wgpu::BindingType::Buffer {
                         has_dynamic_offset: false,
                         min_binding_size: wgpu::BufferSize::new(
@@ -45,7 +44,7 @@ impl super::Pipeline for DiffusePipeline {
                 },
                 wgpu::BindGroupLayoutEntry {
                     binding: 1,
-                    visibility: wgpu::ShaderStage::COMPUTE,
+                    visibility: wgpu::ShaderStages::COMPUTE,
                     ty: wgpu::BindingType::Buffer {
                         has_dynamic_offset: false,
                         min_binding_size: wgpu::BufferSize::new(
@@ -57,7 +56,7 @@ impl super::Pipeline for DiffusePipeline {
                 },
                 wgpu::BindGroupLayoutEntry {
                     binding: 2,
-                    visibility: wgpu::ShaderStage::COMPUTE,
+                    visibility: wgpu::ShaderStages::COMPUTE,
                     ty: wgpu::BindingType::StorageTexture {
                         access: wgpu::StorageTextureAccess::ReadOnly,
                         format: wgpu::TextureFormat::Rgba16Float,
@@ -67,7 +66,7 @@ impl super::Pipeline for DiffusePipeline {
                 },
                 wgpu::BindGroupLayoutEntry {
                     binding: 3,
-                    visibility: wgpu::ShaderStage::COMPUTE,
+                    visibility: wgpu::ShaderStages::COMPUTE,
                     ty: wgpu::BindingType::StorageTexture {
                         access: wgpu::StorageTextureAccess::WriteOnly,
                         format: wgpu::TextureFormat::Rgba16Float,
@@ -93,13 +92,13 @@ impl super::Pipeline for DiffusePipeline {
         let globals_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: None,
             contents: bytemuck::bytes_of(&globals),
-            usage: wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST,
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
 
         let time_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: None,
             contents: bytemuck::bytes_of(&time),
-            usage: wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST,
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
 
         let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
@@ -155,7 +154,7 @@ impl super::Pipeline for DiffusePipeline {
         queue.write_buffer(&self.time_buffer, 0, bytemuck::bytes_of(update));
     }
 
-    fn execute(&self, encoder: &mut wgpu::CommandEncoder, _frame: &wgpu::SwapChainTexture) {
+    fn execute(&self, encoder: &mut wgpu::CommandEncoder, _frame: &wgpu::TextureView) {
         encoder.push_debug_group("Render Pipeline");
         {
             let mut compute_pass =

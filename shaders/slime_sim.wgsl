@@ -33,9 +33,9 @@ struct Agents {
 [[group(0), binding(0)]] var<uniform> globals: Globals;
 [[group(0), binding(1)]] var<uniform> time: TimeBuffer;
 [[group(0), binding(2)]] var<uniform> species_settings: SpeciesSetting;
-[[group(0), binding(3)]] var<storage> agents: [[access(read_write)]] Agents;
-[[group(0), binding(4)]] var trail_map_read: [[access(read)]] texture_storage_2d<rgba16float>;
-[[group(0), binding(5)]] var trail_map_write: [[access(write)]] texture_storage_2d<rgba16float>;
+[[group(0), binding(3)]] var<storage, read_write> agents: Agents;
+[[group(0), binding(4)]] var trail_map_read: texture_storage_2d<rgba16float, read>;
+[[group(0), binding(5)]] var trail_map_write: texture_storage_2d<rgba16float, write>;
 
 
 struct ComputeInput {
@@ -47,12 +47,12 @@ fn scale_to_range(state: f32) -> f32 {
 }
 
 fn hash(state: u32) -> u32 {
-    let state = state ^ 2747636419u32;
-    let state = state * 2654435769u32;
-    let state = state ^ state >> 16u32;
-    let state = state * 2654435769u32;
-    let state = state ^ state >> 16u32;
-    let state = state * 2654435769u32;
+    let state = state ^ 2747636419u;
+    let state = state * 2654435769u;
+    let state = state ^ state >> 16u;
+    let state = state * 2654435769u;
+    let state = state ^ state >> 16u;
+    let state = state * 2654435769u;
 
     return state;
 }
@@ -70,8 +70,8 @@ fn sense(agent: Agent, sensor_angle_offset: f32) -> f32 {
 
     for(var offset_x: i32 = -species_settings.sensor_size; offset_x <= species_settings.sensor_size; offset_x = offset_x + 1) {
         for(var offset_y: i32 = -species_settings.sensor_size; offset_y <= species_settings.sensor_size; offset_y = offset_y + 1) {
-            let sample_x = min(globals.width - 1u32, max(0u32, sensor_center_x + u32(offset_x)));
-            let sample_y = min(globals.height - 1u32, max(0u32, sensor_center_y + u32(offset_y)));
+            let sample_x = min(globals.width - 1u, max(0u, sensor_center_x + u32(offset_x)));
+            let sample_y = min(globals.height - 1u, max(0u, sensor_center_y + u32(offset_y)));
 
             let current_map = textureLoad(trail_map_read, vec2<i32>(i32(sample_x), i32(sample_y)));
             let mask = vec4<f32>(1.0, 1.0, 1.0, 1.0) * 2.0 - 1.0;
@@ -98,7 +98,7 @@ fn cs_main(input: ComputeInput) {
     let random = hash(
         u32(agent.position.y) * globals.width
             + u32(agent.position.x)
-            + hash(id.x + time.time * 100000u32)
+            + hash(id.x + time.time * 100000u)
     );
 
     let sensor_angle_rad = species_settings.sensor_angle_degrees * (3.1415 / 180.0);

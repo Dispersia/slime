@@ -14,8 +14,8 @@ struct Time {
 
 [[group(0), binding(0)]] var<uniform> globals: Globals;
 [[group(0), binding(1)]] var<uniform> time: Time;
-[[group(0), binding(2)]] var trail_map: [[access(read)]] texture_storage_2d<rgba16float>;
-[[group(0), binding(3)]] var diffuse_trail_map: [[access(write)]] texture_storage_2d<rgba16float>;
+[[group(0), binding(2)]] var trail_map: texture_storage_2d<rgba16float, read>;
+[[group(0), binding(3)]] var diffuse_trail_map: texture_storage_2d<rgba16float, write>;
 
 struct ComputeInput {
     [[builtin(global_invocation_id)]] global_invocation_id: vec3<u32>;
@@ -25,7 +25,7 @@ struct ComputeInput {
 fn cs_main(input: ComputeInput) {
     let id = input.global_invocation_id;
 
-    if (id.x < 0u32 || id.x >= globals.width || id.y < 0u32 || id.y >= globals.height) {
+    if (id.x < 0u || id.x >= globals.width || id.y < 0u || id.y >= globals.height) {
         return;
     }
 
@@ -35,8 +35,8 @@ fn cs_main(input: ComputeInput) {
     let original_col = textureLoad(trail_map, coords);
     for (var offset_x: i32 = -1; offset_x <= 1; offset_x = offset_x + 1) {
         for (var offset_y: i32 = -1; offset_y <= 1; offset_y = offset_y + 1) {
-            let sample_x = min(globals.width - 1u32, max(0u32, id.x + u32(offset_x)));
-            let sample_y = min(globals.height - 1u32, max(0u32, id.y + u32(offset_y)));
+            let sample_x = min(globals.width - 1u, max(0u, id.x + u32(offset_x)));
+            let sample_y = min(globals.height - 1u, max(0u, id.y + u32(offset_y)));
 
             let offset_coords = vec2<i32>(i32(sample_x), i32(sample_y));
             let texture_state = textureLoad(trail_map, offset_coords);

@@ -5,7 +5,14 @@ use rand::{distributions::Uniform, prelude::Distribution};
 use wgpu::util::DeviceExt;
 use winit::dpi::PhysicalSize;
 
-use crate::{app::AppSettings, pipeline::{BlitPipeline, BlitSettings, ClearPipeline, ClearSetup, CopyAgentMapPipeline, DiffusePipeline, DiffuseSettings, Pipeline, RenderPipeline, RenderSettings, SlimeSimPipeline, SlimeSimSetup, TimeBuffer}};
+use crate::{
+    app::AppSettings,
+    pipeline::{
+        BlitPipeline, BlitSettings, ClearPipeline, ClearSetup, CopyAgentMapPipeline,
+        DiffusePipeline, DiffuseSettings, Pipeline, RenderPipeline, RenderSettings,
+        SlimeSimPipeline, SlimeSimSetup, TimeBuffer,
+    },
+};
 
 pub struct ShaderPipeline {
     clear_pipeline: ClearPipeline,
@@ -25,7 +32,7 @@ impl ShaderPipeline {
     pub fn new(
         settings: AppSettings,
         size: &PhysicalSize<u32>,
-        swapchain_descriptor: &wgpu::SwapChainDescriptor,
+        surface_configuration: &wgpu::SurfaceConfiguration,
         device: &wgpu::Device,
     ) -> Self {
         let mut rng = rand::thread_rng();
@@ -48,7 +55,7 @@ impl ShaderPipeline {
         let agent_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("slime::shader::simulation::agents_buffer"),
             contents: bytemuck::cast_slice(&agents),
-            usage: wgpu::BufferUsage::STORAGE | wgpu::BufferUsage::COPY_DST,
+            usage: wgpu::BufferUsages::STORAGE,
         });
 
         let trail_map = device.create_texture(&wgpu::TextureDescriptor {
@@ -62,9 +69,7 @@ impl ShaderPipeline {
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
             format: wgpu::TextureFormat::Rgba16Float,
-            usage: wgpu::TextureUsage::RENDER_ATTACHMENT
-                | wgpu::TextureUsage::SAMPLED
-                | wgpu::TextureUsage::STORAGE,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::STORAGE_BINDING | wgpu::TextureUsages::TEXTURE_BINDING,
         });
 
         let trail_map_copy = device.create_texture(&wgpu::TextureDescriptor {
@@ -78,9 +83,7 @@ impl ShaderPipeline {
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
             format: wgpu::TextureFormat::Rgba16Float,
-            usage: wgpu::TextureUsage::RENDER_ATTACHMENT
-                | wgpu::TextureUsage::SAMPLED
-                | wgpu::TextureUsage::STORAGE,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::STORAGE_BINDING | wgpu::TextureUsages::TEXTURE_BINDING,
         });
 
         let diffuse_texture = device.create_texture(&wgpu::TextureDescriptor {
@@ -94,9 +97,7 @@ impl ShaderPipeline {
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
             format: wgpu::TextureFormat::Rgba16Float,
-            usage: wgpu::TextureUsage::RENDER_ATTACHMENT
-                | wgpu::TextureUsage::SAMPLED
-                | wgpu::TextureUsage::STORAGE,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::STORAGE_BINDING | wgpu::TextureUsages::TEXTURE_BINDING,
         });
 
         let display_texture = device.create_texture(&wgpu::TextureDescriptor {
@@ -110,13 +111,11 @@ impl ShaderPipeline {
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
             format: wgpu::TextureFormat::Rgba16Float,
-            usage: wgpu::TextureUsage::RENDER_ATTACHMENT
-                | wgpu::TextureUsage::SAMPLED
-                | wgpu::TextureUsage::STORAGE,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::STORAGE_BINDING | wgpu::TextureUsages::TEXTURE_BINDING,
         });
 
         let render_setup = RenderSettings {
-            format: swapchain_descriptor.format,
+            format: surface_configuration.format,
             width: size.width,
             height: size.height,
             texture_view: display_texture.create_view(&wgpu::TextureViewDescriptor::default()),
@@ -132,10 +131,11 @@ impl ShaderPipeline {
         let slime_sim_setup = SlimeSimSetup {
             width: size.width,
             height: size.height,
-            format: swapchain_descriptor.format,
+            format: surface_configuration.format,
             binding: agent_buffer,
             trail_map_texture_view: trail_map.create_view(&wgpu::TextureViewDescriptor::default()),
-            trail_map_write_texture_view: trail_map_copy.create_view(&wgpu::TextureViewDescriptor::default()),
+            trail_map_write_texture_view: trail_map_copy
+                .create_view(&wgpu::TextureViewDescriptor::default()),
             display_texture_view: display_texture
                 .create_view(&wgpu::TextureViewDescriptor::default()),
             num_agents: agents.len() as u32,
@@ -157,7 +157,7 @@ impl ShaderPipeline {
             width: size.width,
             height: size.height,
             input_texture: diffuse_texture.create_view(&wgpu::TextureViewDescriptor::default()),
-            output_texture: trail_map.create_view(&wgpu::TextureViewDescriptor::default())
+            output_texture: trail_map.create_view(&wgpu::TextureViewDescriptor::default()),
         };
 
         let blit_diffuse_pipeline = BlitPipeline::new(device, &settings, &blit_diffuse_settings);
@@ -166,7 +166,7 @@ impl ShaderPipeline {
             width: size.width,
             height: size.height,
             input_texture: trail_map.create_view(&wgpu::TextureViewDescriptor::default()),
-            output_texture: display_texture.create_view(&wgpu::TextureViewDescriptor::default())
+            output_texture: display_texture.create_view(&wgpu::TextureViewDescriptor::default()),
         };
 
         let blit_display_pipeline = BlitPipeline::new(device, &settings, &blit_display_settings);
@@ -175,19 +175,21 @@ impl ShaderPipeline {
             width: size.width,
             height: size.height,
             input_texture: trail_map.create_view(&wgpu::TextureViewDescriptor::default()),
-            output_texture: trail_map_copy.create_view(&wgpu::TextureViewDescriptor::default())
+            output_texture: trail_map_copy.create_view(&wgpu::TextureViewDescriptor::default()),
         };
 
-        let blit_trail_map_pipeline = BlitPipeline::new(device, &settings, &blip_trail_map_settings);
-        
+        let blit_trail_map_pipeline =
+            BlitPipeline::new(device, &settings, &blip_trail_map_settings);
+
         let blip_trail_map_copy_settings = BlitSettings {
             width: size.width,
             height: size.height,
             input_texture: trail_map_copy.create_view(&wgpu::TextureViewDescriptor::default()),
-            output_texture: trail_map.create_view(&wgpu::TextureViewDescriptor::default())
+            output_texture: trail_map.create_view(&wgpu::TextureViewDescriptor::default()),
         };
 
-        let blit_trail_map_copy_pipeline = BlitPipeline::new(device, &settings, &blip_trail_map_copy_settings);
+        let blit_trail_map_copy_pipeline =
+            BlitPipeline::new(device, &settings, &blip_trail_map_copy_settings);
 
         Self {
             clear_pipeline,
@@ -210,7 +212,7 @@ impl ShaderPipeline {
 
     pub fn render(
         &mut self,
-        frame: &wgpu::SwapChainTexture,
+        frame: &wgpu::TextureView,
         device: &wgpu::Device,
         queue: &wgpu::Queue,
         time_buffer: &TimeBuffer,
@@ -222,14 +224,17 @@ impl ShaderPipeline {
         self.diffuse_pipeline.update(&queue, &time_buffer);
 
         for _ in 0..self.settings.steps_per_frame {
-            self.blit_trail_map_pipeline.execute(&mut command_encoder, &frame);
+            self.blit_trail_map_pipeline
+                .execute(&mut command_encoder, &frame);
             self.slime_sim_pipeline
                 .execute(&mut command_encoder, &frame);
-            self.blit_trail_map_copy_pipeline.execute(&mut command_encoder, &frame);
+            self.blit_trail_map_copy_pipeline
+                .execute(&mut command_encoder, &frame);
 
             self.diffuse_pipeline.execute(&mut command_encoder, &frame);
 
-            self.blit_diffuse_pipeline.execute(&mut command_encoder, &frame);
+            self.blit_diffuse_pipeline
+                .execute(&mut command_encoder, &frame);
         }
 
         if self.settings.agents_only {
@@ -238,7 +243,8 @@ impl ShaderPipeline {
             self.copy_agents_pipeline
                 .execute(&mut command_encoder, &frame);
         } else {
-            self.blit_display_pipeline.execute(&mut command_encoder, &frame);
+            self.blit_display_pipeline
+                .execute(&mut command_encoder, &frame);
         }
 
         self.render_pipeline.execute(&mut command_encoder, &frame);

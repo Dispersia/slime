@@ -25,7 +25,6 @@ impl super::Pipeline for RenderPipeline {
             source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_str!(
                 "../../shaders/draw.wgsl"
             ))),
-            flags: wgpu::ShaderFlags::all(),
         });
 
         let sampler = device.create_sampler(&wgpu::SamplerDescriptor {
@@ -44,13 +43,13 @@ impl super::Pipeline for RenderPipeline {
         let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("vertex buffer"),
             contents: bytemuck::cast_slice(&vertex_data),
-            usage: wgpu::BufferUsage::VERTEX,
+            usage: wgpu::BufferUsages::VERTEX,
         });
 
         let index_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("index buffer"),
             contents: bytemuck::cast_slice(&index_data),
-            usage: wgpu::BufferUsage::INDEX,
+            usage: wgpu::BufferUsages::INDEX,
         });
 
         let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
@@ -58,7 +57,7 @@ impl super::Pipeline for RenderPipeline {
             entries: &[
                 wgpu::BindGroupLayoutEntry {
                     binding: 0,
-                    visibility: wgpu::ShaderStage::FRAGMENT,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
                     ty: wgpu::BindingType::Texture {
                         sample_type: wgpu::TextureSampleType::Float { filterable: false },
                         view_dimension: wgpu::TextureViewDimension::D2,
@@ -68,7 +67,7 @@ impl super::Pipeline for RenderPipeline {
                 },
                 wgpu::BindGroupLayoutEntry {
                     binding: 1,
-                    visibility: wgpu::ShaderStage::FRAGMENT,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
                     ty: wgpu::BindingType::Sampler {
                         filtering: false,
                         comparison: false,
@@ -102,7 +101,7 @@ impl super::Pipeline for RenderPipeline {
 
         let vertex_buffers = [wgpu::VertexBufferLayout {
             array_stride: std::mem::size_of::<Vertex>() as wgpu::BufferAddress,
-            step_mode: wgpu::InputStepMode::Vertex,
+            step_mode: wgpu::VertexStepMode::Vertex,
             attributes: &wgpu::vertex_attr_array![0 => Float32x2, 1 => Float32x2],
         }];
 
@@ -135,9 +134,9 @@ impl super::Pipeline for RenderPipeline {
 
     fn update(&mut self, _queue: &wgpu::Queue, _update: &Self::Update) {}
 
-    fn execute(&self, encoder: &mut wgpu::CommandEncoder, frame: &wgpu::SwapChainTexture) {
+    fn execute(&self, encoder: &mut wgpu::CommandEncoder, frame: &wgpu::TextureView) {
         let color_attachments = [wgpu::RenderPassColorAttachment {
-            view: &frame.view,
+            view: &frame,
             resolve_target: None,
             ops: wgpu::Operations {
                 load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),

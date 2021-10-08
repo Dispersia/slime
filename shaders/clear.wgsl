@@ -5,7 +5,7 @@ struct Globals {
 };
 
 [[group(0), binding(0)]] var<uniform> globals: Globals;
-[[group(0), binding(1)]] var sim_texture: [[access(write)]] texture_storage_2d<rgba16float>;
+[[group(0), binding(1)]] var sim_texture: texture_storage_2d<rgba16float, write>;
 
 struct ComputeInput {
     [[builtin(global_invocation_id)]] global_invocation_id: vec3<u32>;
@@ -18,7 +18,7 @@ fn cs_main(input: ComputeInput) {
     let x = id.x % globals.width;
     let y = u32(f32(id.x) / f32(globals.width));
 
-    if (x < 0u32 || x >= globals.width || y < 0u32 || y >= globals.height) {
+    if (x < 0u || x >= globals.width || y < 0u || y >= globals.height) {
         return;
     }
 

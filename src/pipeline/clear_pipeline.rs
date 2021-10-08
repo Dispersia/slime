@@ -25,7 +25,6 @@ impl super::Pipeline for ClearPipeline {
             source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_str!(
                 "../../shaders/clear.wgsl"
             ))),
-            flags: wgpu::ShaderFlags::all(),
         });
 
         let slime_sim_compute_bind_group_layout =
@@ -34,7 +33,7 @@ impl super::Pipeline for ClearPipeline {
                 entries: &[
                     wgpu::BindGroupLayoutEntry {
                         binding: 0,
-                        visibility: wgpu::ShaderStage::COMPUTE,
+                        visibility: wgpu::ShaderStages::COMPUTE,
                         ty: wgpu::BindingType::Buffer {
                             ty: wgpu::BufferBindingType::Uniform,
                             has_dynamic_offset: false,
@@ -46,7 +45,7 @@ impl super::Pipeline for ClearPipeline {
                     },
                     wgpu::BindGroupLayoutEntry {
                         binding: 1,
-                        visibility: wgpu::ShaderStage::COMPUTE,
+                        visibility: wgpu::ShaderStages::COMPUTE,
                         ty: wgpu::BindingType::StorageTexture {
                             access: wgpu::StorageTextureAccess::WriteOnly,
                             format: wgpu::TextureFormat::Rgba16Float,
@@ -65,7 +64,7 @@ impl super::Pipeline for ClearPipeline {
         let globals_data_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("slime::shader::simulation_parameter_buffer"),
             contents: bytemuck::bytes_of(&globals_data),
-            usage: wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST,
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
 
         let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
@@ -109,7 +108,7 @@ impl super::Pipeline for ClearPipeline {
 
     fn update(&mut self, _queue: &wgpu::Queue, _update: &Self::Update) {}
 
-    fn execute(&self, encoder: &mut wgpu::CommandEncoder, _frame: &wgpu::SwapChainTexture) {
+    fn execute(&self, encoder: &mut wgpu::CommandEncoder, _frame: &wgpu::TextureView) {
         encoder.push_debug_group("compute boid movement");
         {
             let mut compute_pass =

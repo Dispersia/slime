@@ -13,7 +13,7 @@ pub trait Pipeline {
 
     fn new(device: &wgpu::Device, settings: &AppSettings, bind: &Self::Bind) -> Self;
     fn update(&mut self, queue: &wgpu::Queue, update: &Self::Update);
-    fn execute(&self, encoder: &mut wgpu::CommandEncoder, frame: &wgpu::SwapChainTexture);
+    fn execute(&self, encoder: &mut wgpu::CommandEncoder, frame: &wgpu::TextureView);
 }
 
 pub use self::{

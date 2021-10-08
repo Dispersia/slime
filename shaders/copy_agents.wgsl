@@ -8,8 +8,8 @@ struct Agents {
     agents: [[stride(16)]] array<Agent>;
 };
 
-[[group(0), binding(0)]] var agents: [[access(read)]] Agents;
-[[group(0), binding(1)]] var render_texture: [[access(write)]] texture_storage_2d<rgba16float>;
+[[group(0), binding(0)]] var<storage, read> agents: Agents;
+[[group(0), binding(1)]] var render_texture: texture_storage_2d<rgba16float, write>;
 
 struct ComputeInput {
     [[builtin(global_invocation_id)]] global_invocation_id: vec3<u32>;

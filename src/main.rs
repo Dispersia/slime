@@ -51,20 +51,20 @@ fn start(
         queue,
     }: App,
 ) {
-    let requested_format = adapter.get_swap_chain_preferred_format(&surface).unwrap();
+    let requested_format = surface.get_preferred_format(&adapter).unwrap();
 
-    let mut swapchain_descriptor = wgpu::SwapChainDescriptor {
-        usage: wgpu::TextureUsage::RENDER_ATTACHMENT,
+    let mut surface_configuration = wgpu::SurfaceConfiguration {
+        usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
         format: requested_format,
         width: size.width,
         height: size.height,
         present_mode: wgpu::PresentMode::Mailbox,
     };
 
-    let mut swap_chain = device.create_swap_chain(&surface, &swapchain_descriptor);
+    surface.configure(&device, &surface_configuration);
 
     let size = PhysicalSize::new(settings.width, settings.height);
-    let mut shader_pipeline = ShaderPipeline::new(settings, &size, &swapchain_descriptor, &device);
+    let mut shader_pipeline = ShaderPipeline::new(settings, &size, &surface_configuration, &device);
 
     let start_time = Instant::now();
 
@@ -73,22 +73,20 @@ fn start(
 
         match event {
             Event::RedrawRequested(_) => {
-                let frame = match swap_chain.get_current_frame() {
-                    Ok(frame) => frame,
-                    Err(_) => {
-                        swap_chain = device.create_swap_chain(&surface, &swapchain_descriptor);
-                        swap_chain
-                            .get_current_frame()
-                            .expect("Failed to get swap chain")
-                    }
-                };
+                let frame = surface
+                    .get_current_texture()
+                    .expect("Failed to get swap chain texture");
+                let view = frame
+                    .texture
+                    .create_view(&wgpu::TextureViewDescriptor::default());
 
                 let time_buffer = TimeBuffer {
                     time: start_time.elapsed().as_micros() as u32,
                     delta_time: 0.005,
                 };
 
-                shader_pipeline.render(&frame.output, &device, &queue, &time_buffer);
+                shader_pipeline.render(&view, &device, &queue, &time_buffer);
+                frame.present();
             }
             Event::MainEventsCleared => {
                 window.request_redraw();
@@ -97,9 +95,9 @@ fn start(
                 event: WindowEvent::Resized(size),
                 ..
             } => {
-                swapchain_descriptor.width = size.width.max(1);
-                swapchain_descriptor.height = size.height.max(1);
-                swap_chain = device.create_swap_chain(&surface, &swapchain_descriptor);
+                surface_configuration.width = size.width.max(1);
+                surface_configuration.height = size.height.max(1);
+                surface.configure(&device, &surface_configuration);
             }
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::KeyboardInput {
@@ -115,13 +113,16 @@ fn start(
                     *control_flow = ControlFlow::Exit;
                 }
                 WindowEvent::KeyboardInput {
-                    input: event::KeyboardInput {
-                        virtual_keycode: Some(event::VirtualKeyCode::L),
-                        state: event::ElementState::Pressed,
-                        ..
-                    },
+                    input:
+                        event::KeyboardInput {
+                            virtual_keycode: Some(event::VirtualKeyCode::L),
+                            state: event::ElementState::Pressed,
+                            ..
+                        },
                     ..
-                } => { shader_pipeline.swap_buffers(); }
+                } => {
+                    shader_pipeline.swap_buffers();
+                }
                 _ => {}
             },
             _ => {}

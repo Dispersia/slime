@@ -22,7 +22,6 @@ impl super::Pipeline for CopyAgentMapPipeline {
             source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_str!(
                 "../../shaders/copy_agents.wgsl"
             ))),
-            flags: wgpu::ShaderFlags::all(),
         });
 
         let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
@@ -30,9 +29,9 @@ impl super::Pipeline for CopyAgentMapPipeline {
             entries: &[
                 wgpu::BindGroupLayoutEntry {
                     binding: 0,
-                    visibility: wgpu::ShaderStage::COMPUTE,
+                    visibility: wgpu::ShaderStages::COMPUTE,
                     ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Storage { read_only: false },
+                        ty: wgpu::BufferBindingType::Storage { read_only: true },
                         has_dynamic_offset: false,
                         min_binding_size: wgpu::BufferSize::new(
                             (std::mem::size_of::<Agent>() * settings.num_agents)
@@ -43,7 +42,7 @@ impl super::Pipeline for CopyAgentMapPipeline {
                 },
                 wgpu::BindGroupLayoutEntry {
                     binding: 1,
-                    visibility: wgpu::ShaderStage::COMPUTE,
+                    visibility: wgpu::ShaderStages::COMPUTE,
                     ty: wgpu::BindingType::StorageTexture {
                         access: wgpu::StorageTextureAccess::WriteOnly,
                         format: wgpu::TextureFormat::Rgba16Float,
@@ -94,7 +93,7 @@ impl super::Pipeline for CopyAgentMapPipeline {
 
     fn update(&mut self, _queue: &wgpu::Queue, _update: &Self::Update) {}
 
-    fn execute(&self, encoder: &mut wgpu::CommandEncoder, _frame: &wgpu::SwapChainTexture) {
+    fn execute(&self, encoder: &mut wgpu::CommandEncoder, _frame: &wgpu::TextureView) {
         encoder.push_debug_group("Render Pipeline");
         {
             let mut compute_pass =

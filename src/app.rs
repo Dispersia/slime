@@ -30,7 +30,6 @@ pub struct App {
 
 impl App {
     pub async fn new(settings: AppSettings) -> Self {
-        #[cfg(not(target_arch = "wasm32"))]
         pretty_env_logger::init();
 
         let event_loop = EventLoop::new();
@@ -39,23 +38,7 @@ impl App {
             .build(&event_loop)
             .expect("Could not create window");
 
-        #[cfg(target_arch = "wasm32")]
-        {
-            use winit::platform::web::WindowExtWebSys;
-            console_log::init().expect("couldn't create logger");
-            std::panic::set_hook(Box::new(console_error_panic_hook::hook));
-
-            web_sys::window()
-                .and_then(|win| win.document())
-                .and_then(|doc| doc.body())
-                .and_then(|body| {
-                    body.append_child(&web_sys::Element::from(window.canvas()))
-                        .ok()
-                })
-                .expect("couldn't append canvas to body");
-        }
-
-        let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
+        let instance = wgpu::Instance::new(wgpu::Backends::all());
         let size = window.inner_size();
 
         let surface = unsafe { instance.create_surface(&window) };
@@ -63,6 +46,7 @@ impl App {
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: wgpu::PowerPreference::HighPerformance,
+                force_fallback_adapter: false,
                 compatible_surface: Some(&surface),
             })
             .await
@@ -72,7 +56,7 @@ impl App {
             .request_device(
                 &wgpu::DeviceDescriptor {
                     label: Some("slime::device"),
-                    features: Features::default(),
+                    features: Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES,
                     limits: Limits::default(),
                 },
                 None,

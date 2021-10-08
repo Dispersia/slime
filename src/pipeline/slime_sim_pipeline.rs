@@ -28,7 +28,6 @@ impl super::Pipeline for SlimeSimPipeline {
             source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_str!(
                 "../../shaders/slime_sim.wgsl"
             ))),
-            flags: wgpu::ShaderFlags::all(),
         });
 
         let slime_sim_compute_bind_group_layout =
@@ -37,7 +36,7 @@ impl super::Pipeline for SlimeSimPipeline {
                 entries: &[
                     wgpu::BindGroupLayoutEntry {
                         binding: 0,
-                        visibility: wgpu::ShaderStage::COMPUTE,
+                        visibility: wgpu::ShaderStages::COMPUTE,
                         ty: wgpu::BindingType::Buffer {
                             ty: wgpu::BufferBindingType::Uniform,
                             has_dynamic_offset: false,
@@ -49,7 +48,7 @@ impl super::Pipeline for SlimeSimPipeline {
                     },
                     wgpu::BindGroupLayoutEntry {
                         binding: 1,
-                        visibility: wgpu::ShaderStage::COMPUTE,
+                        visibility: wgpu::ShaderStages::COMPUTE,
                         ty: wgpu::BindingType::Buffer {
                             ty: wgpu::BufferBindingType::Uniform,
                             has_dynamic_offset: false,
@@ -61,7 +60,7 @@ impl super::Pipeline for SlimeSimPipeline {
                     },
                     wgpu::BindGroupLayoutEntry {
                         binding: 2,
-                        visibility: wgpu::ShaderStage::COMPUTE,
+                        visibility: wgpu::ShaderStages::COMPUTE,
                         ty: wgpu::BindingType::Buffer {
                             ty: wgpu::BufferBindingType::Uniform,
                             has_dynamic_offset: false,
@@ -74,7 +73,7 @@ impl super::Pipeline for SlimeSimPipeline {
                     },
                     wgpu::BindGroupLayoutEntry {
                         binding: 3,
-                        visibility: wgpu::ShaderStage::COMPUTE,
+                        visibility: wgpu::ShaderStages::COMPUTE,
                         ty: wgpu::BindingType::Buffer {
                             ty: wgpu::BufferBindingType::Storage { read_only: false },
                             has_dynamic_offset: false,
@@ -87,7 +86,7 @@ impl super::Pipeline for SlimeSimPipeline {
                     },
                     wgpu::BindGroupLayoutEntry {
                         binding: 4,
-                        visibility: wgpu::ShaderStage::COMPUTE,
+                        visibility: wgpu::ShaderStages::COMPUTE,
                         ty: wgpu::BindingType::StorageTexture {
                             access: wgpu::StorageTextureAccess::ReadOnly,
                             format: wgpu::TextureFormat::Rgba16Float,
@@ -97,7 +96,7 @@ impl super::Pipeline for SlimeSimPipeline {
                     },
                     wgpu::BindGroupLayoutEntry {
                         binding: 5,
-                        visibility: wgpu::ShaderStage::COMPUTE,
+                        visibility: wgpu::ShaderStages::COMPUTE,
                         ty: wgpu::BindingType::StorageTexture {
                             access: wgpu::StorageTextureAccess::WriteOnly,
                             format: wgpu::TextureFormat::Rgba16Float,
@@ -117,7 +116,7 @@ impl super::Pipeline for SlimeSimPipeline {
         let globals_data_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("slime::shader::simulation_parameter_buffer"),
             contents: bytemuck::bytes_of(&globals_data),
-            usage: wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST,
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
 
         let time_data = TimeBuffer {
@@ -128,7 +127,7 @@ impl super::Pipeline for SlimeSimPipeline {
         let time_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("slime::shader::time_buffer"),
             contents: bytemuck::bytes_of(&time_data),
-            usage: wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST,
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
 
         let species_settings = SpeciesSetting {
@@ -143,7 +142,7 @@ impl super::Pipeline for SlimeSimPipeline {
         let species_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("slime::shader::species_buffer"),
             contents: bytemuck::bytes_of(&species_settings),
-            usage: wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST,
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
 
         let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
@@ -206,7 +205,7 @@ impl super::Pipeline for SlimeSimPipeline {
         queue.write_buffer(&self.time_buffer, 0, bytemuck::bytes_of(update));
     }
 
-    fn execute(&self, encoder: &mut wgpu::CommandEncoder, _frame: &wgpu::SwapChainTexture) {
+    fn execute(&self, encoder: &mut wgpu::CommandEncoder, _frame: &wgpu::TextureView) {
         encoder.push_debug_group("compute boid movement");
         {
             let mut compute_pass =
