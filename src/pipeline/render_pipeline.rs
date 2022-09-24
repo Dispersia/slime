@@ -15,12 +15,8 @@ impl super::Pipeline for RenderPipeline {
     type Bind = RenderSettings;
     type Update = ();
 
-    fn new(
-        device: &wgpu::Device,
-        _settings: &crate::app::AppSettings,
-        bind: &Self::Bind,
-    ) -> Self {
-        let draw_shader = device.create_shader_module(&wgpu::ShaderModuleDescriptor {
+    fn new(device: &wgpu::Device, _settings: &crate::app::AppSettings, bind: &Self::Bind) -> Self {
+        let draw_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("slime::shader::draw"),
             source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_str!(
                 "../../shaders/draw.wgsl"
@@ -68,10 +64,7 @@ impl super::Pipeline for RenderPipeline {
                 wgpu::BindGroupLayoutEntry {
                     binding: 1,
                     visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Sampler {
-                        filtering: false,
-                        comparison: false,
-                    },
+                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
                     count: None,
                 },
             ],
@@ -116,8 +109,13 @@ impl super::Pipeline for RenderPipeline {
             fragment: Some(wgpu::FragmentState {
                 module: &draw_shader,
                 entry_point: "fs_main",
-                targets: &[bind.format.into()],
+                targets: &[Some(wgpu::ColorTargetState {
+                    format: bind.format.into(),
+                    blend: Some(wgpu::BlendState::ALPHA_BLENDING),
+                    write_mask: wgpu::ColorWrites::default(),
+                })],
             }),
+            multiview: None,
             primitive: wgpu::PrimitiveState::default(),
             depth_stencil: None,
             multisample: wgpu::MultisampleState::default(),
@@ -135,14 +133,14 @@ impl super::Pipeline for RenderPipeline {
     fn update(&mut self, _queue: &wgpu::Queue, _update: &Self::Update) {}
 
     fn execute(&self, encoder: &mut wgpu::CommandEncoder, frame: &wgpu::TextureView) {
-        let color_attachments = [wgpu::RenderPassColorAttachment {
+        let color_attachments = [Some(wgpu::RenderPassColorAttachment {
             view: &frame,
             resolve_target: None,
             ops: wgpu::Operations {
                 load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
                 store: true,
             },
-        }];
+        })];
 
         let render_pass_descriptor = wgpu::RenderPassDescriptor {
             label: None,

@@ -17,7 +17,7 @@ impl super::Pipeline for CopyAgentMapPipeline {
     type Update = TimeBuffer;
 
     fn new(device: &wgpu::Device, settings: &crate::app::AppSettings, bind: &Self::Bind) -> Self {
-        let shader = device.create_shader_module(&wgpu::ShaderModuleDescriptor {
+        let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("slime::shader::copy"),
             source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_str!(
                 "../../shaders/copy_agents.wgsl"
@@ -100,7 +100,7 @@ impl super::Pipeline for CopyAgentMapPipeline {
                 encoder.begin_compute_pass(&wgpu::ComputePassDescriptor { label: None });
             compute_pass.set_pipeline(&self.pipeline);
             compute_pass.set_bind_group(0, &self.bind_group, &[]);
-            compute_pass.dispatch(self.workgroup_count, 1, 1);
+            compute_pass.dispatch_workgroups(self.workgroup_count, 1, 1);
         }
         encoder.pop_debug_group();
     }

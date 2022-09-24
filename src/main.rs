@@ -51,7 +51,7 @@ fn start(
         queue,
     }: App,
 ) {
-    let requested_format = surface.get_preferred_format(&adapter).unwrap();
+    let requested_format = surface.get_supported_formats(&adapter)[0];
 
     let mut surface_configuration = wgpu::SurfaceConfiguration {
         usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
