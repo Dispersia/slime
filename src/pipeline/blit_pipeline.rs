@@ -17,7 +17,7 @@ impl super::Pipeline for BlitPipeline {
     type Update = ();
 
     fn new(device: &wgpu::Device, _settings: &crate::app::AppSettings, bind: &Self::Bind) -> Self {
-        let shader = device.create_shader_module(&wgpu::ShaderModuleDescriptor {
+        let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("slime::shader::blit"),
             source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_str!(
                 "../../shaders/blit.wgsl"
@@ -126,7 +126,7 @@ impl super::Pipeline for BlitPipeline {
                 encoder.begin_compute_pass(&wgpu::ComputePassDescriptor { label: None });
             compute_pass.set_pipeline(&self.pipeline);
             compute_pass.set_bind_group(0, &self.bind_group, &[]);
-            compute_pass.dispatch(self.workgroup_count_x, self.workgroup_count_y, 1);
+            compute_pass.dispatch_workgroups(self.workgroup_count_x, self.workgroup_count_y, 1);
         }
         encoder.pop_debug_group();
     }

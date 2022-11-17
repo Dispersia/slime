@@ -1,27 +1,37 @@
-[[block]]
 struct Globals {
-    width: u32;
-    height: u32;
-    diffuse_rate: f32;
-    decay_rate: f32;
+    width: u32,
+    height: u32,
+    diffuse_rate: f32,
+    decay_rate: f32,
 };
 
-[[block]]
 struct Time {
-    time: u32;
-    delta_time: f32;
+    time: u32,
+    delta_time: f32,
 };
 
-[[group(0), binding(0)]] var<uniform> globals: Globals;
-[[group(0), binding(1)]] var<uniform> time: Time;
-[[group(0), binding(2)]] var trail_map: texture_storage_2d<rgba16float, read>;
-[[group(0), binding(3)]] var diffuse_trail_map: texture_storage_2d<rgba16float, write>;
+@group(0)
+@binding(0)
+var<uniform> globals: Globals;
+
+@group(0)
+@binding(1)
+var<uniform> time: Time;
+
+@group(0)
+@binding(2)
+var trail_map: texture_storage_2d<rgba16float, read>;
+
+@group(0)
+@binding(3)
+var diffuse_trail_map: texture_storage_2d<rgba16float, write>;
 
 struct ComputeInput {
-    [[builtin(global_invocation_id)]] global_invocation_id: vec3<u32>;
+    @builtin(global_invocation_id) global_invocation_id: vec3<u32>,
 };
 
-[[stage(compute), workgroup_size(8, 8)]]
+@compute
+@workgroup_size(8, 8)
 fn cs_main(input: ComputeInput) {
     let id = input.global_invocation_id;
 

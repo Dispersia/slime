@@ -15,12 +15,8 @@ impl super::Pipeline for ClearPipeline {
     type Bind = ClearSetup;
     type Update = ();
 
-    fn new(
-        device: &wgpu::Device,
-        _settings: &crate::app::AppSettings,
-        bind: &Self::Bind,
-    ) -> Self {
-        let slime_sim_compute_shader = device.create_shader_module(&wgpu::ShaderModuleDescriptor {
+    fn new(device: &wgpu::Device, _settings: &crate::app::AppSettings, bind: &Self::Bind) -> Self {
+        let slime_sim_compute_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("slime::shader::slime_sim_compute"),
             source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_str!(
                 "../../shaders/clear.wgsl"
@@ -82,8 +78,7 @@ impl super::Pipeline for ClearPipeline {
             label: Some("slime::shader::slime_sim::bind_group"),
         });
 
-        let work_group_count =
-            ((bind.width * bind.height) as f32 / BOUND_SIZE).ceil() as u32;
+        let work_group_count = ((bind.width * bind.height) as f32 / BOUND_SIZE).ceil() as u32;
 
         let slime_sim_compute_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
@@ -115,7 +110,7 @@ impl super::Pipeline for ClearPipeline {
                 encoder.begin_compute_pass(&wgpu::ComputePassDescriptor { label: None });
             compute_pass.set_pipeline(&self.pipeline);
             compute_pass.set_bind_group(0, &self.bind_group, &[]);
-            compute_pass.dispatch(self.work_group_count, 1, 1);
+            compute_pass.dispatch_workgroups(self.work_group_count, 1, 1);
         }
         encoder.pop_debug_group();
     }

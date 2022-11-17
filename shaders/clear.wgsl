@@ -1,17 +1,22 @@
-[[block]]
 struct Globals {
-    width: u32;
-    height: u32;
+    width: u32,
+    height: u32,
 };
 
-[[group(0), binding(0)]] var<uniform> globals: Globals;
-[[group(0), binding(1)]] var sim_texture: texture_storage_2d<rgba16float, write>;
+@group(0)
+@binding(0)
+var<uniform> globals: Globals;
+
+@group(0)
+@binding(1)
+var sim_texture: texture_storage_2d<rgba16float, write>;
 
 struct ComputeInput {
-    [[builtin(global_invocation_id)]] global_invocation_id: vec3<u32>;
+    @builtin(global_invocation_id) global_invocation_id: vec3<u32>,
 };
 
-[[stage(compute), workgroup_size(64)]]
+@compute
+@workgroup_size(64)
 fn cs_main(input: ComputeInput) {
     let id = input.global_invocation_id;
 
