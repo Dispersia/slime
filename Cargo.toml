@@ -1,5 +1,3 @@
-cargo-features = ["strip"]
-
 [package]
 authors = ["Aaron Housh <dispersias@gmail.com>"]
 edition = "2021"
@@ -12,13 +10,13 @@ lto = 'thin'
 strip = 'symbols'
 
 [dependencies]
-async-executor = "1.0"
-bytemuck = {version = "1.5", features = ["derive"]}
+async-executor = "1.5"
+bytemuck = {version = "1.12", features = ["derive"]}
 cgmath = "0.18"
 instant = {version = "0.1", features = ["wasm-bindgen"]}
 log = "0.4"
 pollster = "0.2"
 pretty_env_logger = "0.4"
-rand = "0.7"
-wgpu = "0.11"
-winit = "0.25"
+rand = "0.8"
+wgpu = "0.14"
+winit = "0.27"
