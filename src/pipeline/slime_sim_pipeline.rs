@@ -18,12 +18,8 @@ impl super::Pipeline for SlimeSimPipeline {
     type Bind = SlimeSimSetup;
     type Update = TimeBuffer;
 
-    fn new(
-        device: &wgpu::Device,
-        settings: &crate::app::AppSettings,
-        bind: &Self::Bind,
-    ) -> Self {
-        let slime_sim_compute_shader = device.create_shader_module(&wgpu::ShaderModuleDescriptor {
+    fn new(device: &wgpu::Device, settings: &crate::app::AppSettings, bind: &Self::Bind) -> Self {
+        let slime_sim_compute_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("slime::shader::slime_sim_compute"),
             source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_str!(
                 "../../shaders/slime_sim.wgsl"
@@ -100,10 +96,10 @@ impl super::Pipeline for SlimeSimPipeline {
                         ty: wgpu::BindingType::StorageTexture {
                             access: wgpu::StorageTextureAccess::WriteOnly,
                             format: wgpu::TextureFormat::Rgba16Float,
-                            view_dimension: wgpu::TextureViewDimension::D2
+                            view_dimension: wgpu::TextureViewDimension::D2,
                         },
                         count: None,
-                    }
+                    },
                 ],
             });
 
@@ -170,8 +166,10 @@ impl super::Pipeline for SlimeSimPipeline {
                 },
                 wgpu::BindGroupEntry {
                     binding: 5,
-                    resource: wgpu::BindingResource::TextureView(&bind.trail_map_write_texture_view),
-                }
+                    resource: wgpu::BindingResource::TextureView(
+                        &bind.trail_map_write_texture_view,
+                    ),
+                },
             ],
             label: Some("slime::shader::slime_sim::bind_group"),
         });
@@ -212,7 +210,7 @@ impl super::Pipeline for SlimeSimPipeline {
                 encoder.begin_compute_pass(&wgpu::ComputePassDescriptor { label: None });
             compute_pass.set_pipeline(&self.pipeline);
             compute_pass.set_bind_group(0, &self.bind_group, &[]);
-            compute_pass.dispatch(self.work_group_count, 1, 1);
+            compute_pass.dispatch_workgroups(self.work_group_count, 1, 1);
         }
         encoder.pop_debug_group();
     }

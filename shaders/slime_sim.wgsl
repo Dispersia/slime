@@ -1,45 +1,58 @@
-[[block]]
 struct Globals {
-    trail_weight: f32;
-    width: u32;
-    height: u32;
+    trail_weight: f32,
+    width: u32,
+    height: u32,
 };
 
-[[block]]
 struct TimeBuffer {
-    time: u32;
-    delta_time: f32;
+    time: u32,
+    delta_time: f32,
 };
 
-[[block]]
 struct SpeciesSetting {
-    move_speed: f32;
-    turn_speed: f32;
-    sensor_angle_degrees: f32;
-    sensor_offset_dst: f32;
-    sensor_size: i32;
+    move_speed: f32,
+    turn_speed: f32,
+    sensor_angle_degrees: f32,
+    sensor_offset_dst: f32,
+    sensor_size: i32,
 };
 
 struct Agent {
-    position: vec2<f32>;
-    angle: f32;
+    position: vec2<f32>,
+    angle: f32,
 };
 
-[[block]]
 struct Agents {
-    agents: [[stride(16)]] array<Agent>;
+    agents: array<Agent>,
 };
 
-[[group(0), binding(0)]] var<uniform> globals: Globals;
-[[group(0), binding(1)]] var<uniform> time: TimeBuffer;
-[[group(0), binding(2)]] var<uniform> species_settings: SpeciesSetting;
-[[group(0), binding(3)]] var<storage, read_write> agents: Agents;
-[[group(0), binding(4)]] var trail_map_read: texture_storage_2d<rgba16float, read>;
-[[group(0), binding(5)]] var trail_map_write: texture_storage_2d<rgba16float, write>;
+@group(0)
+@binding(0)
+var<uniform> globals: Globals;
+
+@group(0)
+@binding(1)
+var<uniform> time: TimeBuffer;
+
+@group(0)
+@binding(2)
+var<uniform> species_settings: SpeciesSetting;
+
+@group(0)
+@binding(3)
+var<storage, read_write> agents: Agents;
+
+@group(0)
+@binding(4)
+var trail_map_read: texture_storage_2d<rgba16float, read>;
+
+@group(0)
+@binding(5)
+var trail_map_write: texture_storage_2d<rgba16float, write>;
 
 
 struct ComputeInput {
-    [[builtin(global_invocation_id)]] global_invocation_id: vec3<u32>;
+    @builtin(global_invocation_id) global_invocation_id: vec3<u32>,
 };
 
 fn scale_to_range(state: f32) -> f32 {
@@ -82,7 +95,8 @@ fn sense(agent: Agent, sensor_angle_offset: f32) -> f32 {
     return sum;
 }
 
-[[stage(compute), workgroup_size(64)]]
+@compute
+@workgroup_size(64)
 fn cs_main(input: ComputeInput) {
     let id = input.global_invocation_id;
 
@@ -111,11 +125,11 @@ fn cs_main(input: ComputeInput) {
 
     if (weight_forward > weight_left && weight_forward > weight_right) {
         agents.agents[index].angle = agent.angle + 0.0;
-    } elseif (weight_forward < weight_left && weight_forward < weight_right) {
+    } else if (weight_forward < weight_left && weight_forward < weight_right) {
         agents.agents[index].angle = agent.angle + (random_steer_strength - 0.5) * 2.0 * turn_speed * time.delta_time;
-    } elseif (weight_right > weight_left) {
+    } else if (weight_right > weight_left) {
         agents.agents[index].angle = agent.angle - random_steer_strength * turn_speed * time.delta_time;
-    } elseif (weight_left > weight_right) {
+    } else if (weight_left > weight_right) {
         agents.agents[index].angle = agent.angle + random_steer_strength * turn_speed * time.delta_time;
     }
 

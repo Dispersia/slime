@@ -1,21 +1,26 @@
 struct Agent {
-    position: vec2<f32>;
-    angle: f32;
+    position: vec2<f32>,
+    angle: f32,
 };
 
-[[block]]
 struct Agents {
-    agents: [[stride(16)]] array<Agent>;
+    agents: array<Agent>,
 };
 
-[[group(0), binding(0)]] var<storage, read> agents: Agents;
-[[group(0), binding(1)]] var render_texture: texture_storage_2d<rgba16float, write>;
+@group(0)
+@binding(0)
+var<storage, read> agents: Agents;
+
+@group(0)
+@binding(1)
+var render_texture: texture_storage_2d<rgba16float, write>;
 
 struct ComputeInput {
-    [[builtin(global_invocation_id)]] global_invocation_id: vec3<u32>;
+    @builtin(global_invocation_id) global_invocation_id: vec3<u32>,
 };
 
-[[stage(compute), workgroup_size(16)]]
+@compute
+@workgroup_size(16)
 fn cs_main(input: ComputeInput) {
     let id = input.global_invocation_id;
     let total_agents = arrayLength(&agents.agents);
