@@ -56,8 +56,8 @@ fn cs_main(input: ComputeInput) {
 
     let blurred_col = sum / 9.0;
     let diffuse_weight = clamp(globals.diffuse_rate * time.delta_time, 0.0, 1.0);
-    let blurred_col = original_col * (1.0 - diffuse_weight) + blurred_col * diffuse_weight;
+    let blurred_col2 = original_col * (1.0 - diffuse_weight) + blurred_col * diffuse_weight;
 
-    let output = max(vec4<f32>(0.0, 0.0, 0.0, 0.0), blurred_col - globals.decay_rate * time.delta_time);
+    let output = max(vec4<f32>(0.0, 0.0, 0.0, 0.0), blurred_col2 - globals.decay_rate * time.delta_time);
     textureStore(diffuse_trail_map, coords, output);
 }

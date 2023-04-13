@@ -60,14 +60,14 @@ fn scale_to_range(state: f32) -> f32 {
 }
 
 fn hash(state: u32) -> u32 {
-    let state = state ^ 2747636419u;
-    let state = state * 2654435769u;
-    let state = state ^ state >> 16u;
-    let state = state * 2654435769u;
-    let state = state ^ state >> 16u;
-    let state = state * 2654435769u;
+    let state1 = state ^ 2747636419u;
+    let state2 = state1 * 2654435769u;
+    let state3 = state2 ^ state >> 16u;
+    let state4 = state3 * 2654435769u;
+    let state5 = state4 ^ state >> 16u;
+    let state6 = state5 * 2654435769u;
 
-    return state;
+    return state6;
 }
 
 fn sense(agent: Agent, sensor_angle_offset: f32) -> f32 {

@@ -51,15 +51,23 @@ fn start(
         queue,
     }: App,
 ) {
-    let requested_format = surface.get_supported_formats(&adapter)[0];
+    let capabilities = surface.get_capabilities(&adapter);
+    let surface_format = capabilities
+        .formats
+        .iter()
+        .copied()
+        .filter(|f| f.describe().srgb)
+        .next()
+        .unwrap_or(capabilities.formats[0]);
 
     let mut surface_configuration = wgpu::SurfaceConfiguration {
         usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-        format: requested_format,
+        format: surface_format,
         width: size.width,
         height: size.height,
         present_mode: wgpu::PresentMode::AutoVsync,
         alpha_mode: wgpu::CompositeAlphaMode::Auto,
+        view_formats: vec![],
     };
 
     surface.configure(&device, &surface_configuration);

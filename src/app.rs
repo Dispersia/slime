@@ -38,19 +38,19 @@ impl App {
             .build(&event_loop)
             .expect("Could not create window");
 
-        let instance = wgpu::Instance::new(wgpu::Backends::all());
+        let instance = wgpu::Instance::default();
+
         let size = window.inner_size();
 
-        let surface = unsafe { instance.create_surface(&window) };
+        let surface = unsafe { instance.create_surface(&window).unwrap() };
 
-        let adapter = instance
-            .request_adapter(&wgpu::RequestAdapterOptions {
-                power_preference: wgpu::PowerPreference::HighPerformance,
-                force_fallback_adapter: false,
-                compatible_surface: Some(&surface),
-            })
-            .await
-            .expect("No suitable GPU adapter found");
+        let adapter = wgpu::util::initialize_adapter_from_env_or_default(
+            &instance,
+            wgpu::util::backend_bits_from_env().unwrap_or_else(wgpu::Backends::all),
+            Some(&surface),
+        )
+        .await
+        .expect("No suitable GPU adapters found");
 
         let (device, queue) = adapter
             .request_device(
