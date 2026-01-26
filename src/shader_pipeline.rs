@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 
 use bytemuck::{Pod, Zeroable};
-use rand::{distributions::Uniform, prelude::Distribution};
+use rand::distr::{Distribution, Uniform};
 use wgpu::util::DeviceExt;
 use winit::dpi::PhysicalSize;
 
@@ -35,10 +35,9 @@ impl ShaderPipeline {
         surface_configuration: &wgpu::SurfaceConfiguration,
         device: &wgpu::Device,
     ) -> Self {
-        let mut rng = rand::thread_rng();
-        let agent_uniform = Uniform::new_inclusive(0.0, 1.0);
+        let mut rng = rand::rng();
+        let agent_uniform = Uniform::new_inclusive(0.0, 1.0).unwrap();
         let agents = (0..settings.num_agents)
-            .into_iter()
             .map(|_| {
                 let start_pos = [size.width as f32 / 2.0, size.height as f32 / 2.0];
 
@@ -128,8 +127,6 @@ impl ShaderPipeline {
 
         let render_setup = RenderSettings {
             format: surface_configuration.format,
-            width: size.width,
-            height: size.height,
             texture_view: display_texture.create_view(&wgpu::TextureViewDescriptor::default()),
         };
 
@@ -143,7 +140,6 @@ impl ShaderPipeline {
         let slime_sim_setup = SlimeSimSetup {
             width: size.width,
             height: size.height,
-            format: surface_configuration.format,
             binding: agent_buffer,
             trail_map_texture_view: trail_map.create_view(&wgpu::TextureViewDescriptor::default()),
             trail_map_write_texture_view: trail_map_copy
@@ -232,34 +228,34 @@ impl ShaderPipeline {
         let mut command_encoder =
             device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
 
-        self.slime_sim_pipeline.update(&queue, &time_buffer);
-        self.diffuse_pipeline.update(&queue, &time_buffer);
+        self.slime_sim_pipeline.update(queue, time_buffer);
+        self.diffuse_pipeline.update(queue, time_buffer);
 
         for _ in 0..self.settings.steps_per_frame {
             self.blit_trail_map_pipeline
-                .execute(&mut command_encoder, &frame);
+                .execute(&mut command_encoder, frame);
             self.slime_sim_pipeline
-                .execute(&mut command_encoder, &frame);
+                .execute(&mut command_encoder, frame);
             self.blit_trail_map_copy_pipeline
-                .execute(&mut command_encoder, &frame);
+                .execute(&mut command_encoder, frame);
 
-            self.diffuse_pipeline.execute(&mut command_encoder, &frame);
+            self.diffuse_pipeline.execute(&mut command_encoder, frame);
 
             self.blit_diffuse_pipeline
-                .execute(&mut command_encoder, &frame);
+                .execute(&mut command_encoder, frame);
         }
 
         if self.settings.agents_only {
-            self.clear_pipeline.execute(&mut command_encoder, &frame);
+            self.clear_pipeline.execute(&mut command_encoder, frame);
 
             self.copy_agents_pipeline
-                .execute(&mut command_encoder, &frame);
+                .execute(&mut command_encoder, frame);
         } else {
             self.blit_display_pipeline
-                .execute(&mut command_encoder, &frame);
+                .execute(&mut command_encoder, frame);
         }
 
-        self.render_pipeline.execute(&mut command_encoder, &frame);
+        self.render_pipeline.execute(&mut command_encoder, frame);
 
         self.frame_num += 1;
 

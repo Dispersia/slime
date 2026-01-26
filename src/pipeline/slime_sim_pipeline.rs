@@ -181,14 +181,16 @@ impl super::Pipeline for SlimeSimPipeline {
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("slime::shader::slime_sim_compute_pipeline_layout"),
                 bind_group_layouts: &[&slime_sim_compute_bind_group_layout],
-                push_constant_ranges: &[],
+                immediate_size: 0,
             });
 
         let pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
             label: Some("slime::shader::compute_pipeline"),
             layout: Some(&slime_sim_compute_layout),
             module: &slime_sim_compute_shader,
-            entry_point: "cs_main",
+            entry_point: Some("cs_main"),
+            compilation_options: Default::default(),
+            cache: None,
         });
 
         Self {
@@ -206,8 +208,10 @@ impl super::Pipeline for SlimeSimPipeline {
     fn execute(&self, encoder: &mut wgpu::CommandEncoder, _frame: &wgpu::TextureView) {
         encoder.push_debug_group("compute boid movement");
         {
-            let mut compute_pass =
-                encoder.begin_compute_pass(&wgpu::ComputePassDescriptor { label: None });
+            let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+                label: None,
+                timestamp_writes: None,
+            });
             compute_pass.set_pipeline(&self.pipeline);
             compute_pass.set_bind_group(0, &self.bind_group, &[]);
             compute_pass.dispatch_workgroups(self.work_group_count, 1, 1);
@@ -245,7 +249,6 @@ struct SpeciesSetting {
 pub struct SlimeSimSetup {
     pub width: u32,
     pub height: u32,
-    pub format: wgpu::TextureFormat,
     pub binding: wgpu::Buffer,
     pub trail_map_texture_view: wgpu::TextureView,
     pub trail_map_write_texture_view: wgpu::TextureView,

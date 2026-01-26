@@ -96,14 +96,16 @@ impl super::Pipeline for BlitPipeline {
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("render"),
                 bind_group_layouts: &[&bind_group_layout],
-                push_constant_ranges: &[],
+                immediate_size: 0,
             });
 
         let diffuse_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
             label: None,
             layout: Some(&diffuse_pipeline_layout),
-            entry_point: "cs_main",
+            entry_point: Some("cs_main"),
             module: &shader,
+            compilation_options: Default::default(),
+            cache: None,
         });
 
         let workgroup_count_x = (bind.width as f32 / BLIT_SIZE).ceil() as u32;
@@ -122,8 +124,10 @@ impl super::Pipeline for BlitPipeline {
     fn execute(&self, encoder: &mut wgpu::CommandEncoder, _frame: &wgpu::TextureView) {
         encoder.push_debug_group("Render Pipeline");
         {
-            let mut compute_pass =
-                encoder.begin_compute_pass(&wgpu::ComputePassDescriptor { label: None });
+            let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+                label: None,
+                timestamp_writes: None,
+            });
             compute_pass.set_pipeline(&self.pipeline);
             compute_pass.set_bind_group(0, &self.bind_group, &[]);
             compute_pass.dispatch_workgroups(self.workgroup_count_x, self.workgroup_count_y, 1);

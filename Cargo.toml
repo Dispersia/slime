@@ -1,8 +1,8 @@
 [package]
 authors = ["Aaron Housh <dispersias@gmail.com>"]
-edition = "2021"
 name = "slime"
 version = "1.0.0"
+edition = "2024"
 
 [profile.release]
 codegen-units = 1
@@ -10,13 +10,13 @@ lto = 'thin'
 strip = 'symbols'
 
 [dependencies]
-async-executor = "1.5"
-bytemuck = {version = "1.12", features = ["derive"]}
+async-executor = "1.13"
+bytemuck = {version = "1.24", features = ["derive"]}
 cgmath = "0.18"
 instant = {version = "0.1", features = ["wasm-bindgen"]}
 log = "0.4"
-pollster = "0.2"
-pretty_env_logger = "0.4"
-rand = "0.8"
-wgpu = "0.15"
-winit = "0.27"
+pollster = "0.4"
+pretty_env_logger = "0.5"
+rand = "0.9"
+wgpu = "28.0"
+winit = "0.30"

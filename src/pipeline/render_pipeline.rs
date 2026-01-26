@@ -30,7 +30,7 @@ impl super::Pipeline for RenderPipeline {
             address_mode_w: wgpu::AddressMode::Repeat,
             mag_filter: wgpu::FilterMode::Nearest,
             min_filter: wgpu::FilterMode::Nearest,
-            mipmap_filter: wgpu::FilterMode::Nearest,
+            mipmap_filter: wgpu::MipmapFilterMode::Nearest,
             ..Default::default()
         });
 
@@ -89,7 +89,7 @@ impl super::Pipeline for RenderPipeline {
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("render"),
                 bind_group_layouts: &[&bind_group_layout],
-                push_constant_ranges: &[],
+                immediate_size: 0,
             });
 
         let vertex_buffers = [wgpu::VertexBufferLayout {
@@ -103,18 +103,21 @@ impl super::Pipeline for RenderPipeline {
             layout: Some(&render_pipeline_layout),
             vertex: wgpu::VertexState {
                 module: &draw_shader,
-                entry_point: "vs_main",
+                entry_point: Some("vs_main"),
                 buffers: &vertex_buffers,
+                compilation_options: Default::default(),
             },
             fragment: Some(wgpu::FragmentState {
                 module: &draw_shader,
-                entry_point: "fs_main",
+                entry_point: Some("fs_main"),
                 targets: &[Some(bind.format.into())],
+                compilation_options: Default::default(),
             }),
             primitive: wgpu::PrimitiveState::default(),
             depth_stencil: None,
             multisample: wgpu::MultisampleState::default(),
-            multiview: None,
+            multiview_mask: None,
+            cache: None,
         });
 
         Self {
@@ -130,23 +133,27 @@ impl super::Pipeline for RenderPipeline {
 
     fn execute(&self, encoder: &mut wgpu::CommandEncoder, frame: &wgpu::TextureView) {
         let color_attachments = [Some(wgpu::RenderPassColorAttachment {
-            view: &frame,
+            view: frame,
             resolve_target: None,
             ops: wgpu::Operations {
                 load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
-                store: true,
+                store: wgpu::StoreOp::Store,
             },
+            depth_slice: None,
         })];
 
         let render_pass_descriptor = wgpu::RenderPassDescriptor {
             label: None,
             color_attachments: &color_attachments,
             depth_stencil_attachment: None,
+            timestamp_writes: None,
+            occlusion_query_set: None,
+            multiview_mask: None,
         };
 
         encoder.push_debug_group("Render Pipeline");
         {
-            let mut render_pass = encoder.begin_render_pass(&&render_pass_descriptor);
+            let mut render_pass = encoder.begin_render_pass(&render_pass_descriptor);
             render_pass.set_pipeline(&self.pipeline);
             render_pass.set_bind_group(0, &self.bind_group, &[]);
             render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
@@ -186,7 +193,5 @@ fn create_vertices() -> (Vec<Vertex>, Vec<u16>) {
 
 pub struct RenderSettings {
     pub format: wgpu::TextureFormat,
-    pub width: u32,
-    pub height: u32,
     pub texture_view: wgpu::TextureView,
 }
